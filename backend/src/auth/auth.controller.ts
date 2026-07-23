@@ -16,7 +16,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
   CurrentUser,
-  AuthenticatedUser,
+  type AuthenticatedUser,
 } from './decorators/current-user.decorator';
 
 @Controller('auth')
