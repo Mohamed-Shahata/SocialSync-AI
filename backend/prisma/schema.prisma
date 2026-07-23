@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  FREE_TRIAL
+  BASIC
+  PRO
+}
+
+enum Platform {
+  LINKEDIN
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+  X
+}
+
+enum AccountStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+enum VariantStatus {
+  PENDING
+  APPROVED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  plan           Plan     @default(FREE_TRIAL)
+  trialPostsUsed Int      @default(0)
+  tokenVersion   Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  socialAccounts SocialAccount[]
+  posts          Post[]
+  subscription   Subscription?
+}
+
+model SocialAccount {
+  id             String        @id @default(uuid())
+  userId         String
+  platform       Platform
+  accountName    String
+  accessToken    String
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  externalId     String
+  status         AccountStatus @default(ACTIVE)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, platform, externalId])
+}
+
+model Post {
+  id           String     @id @default(uuid())
+  userId       String
+  originalText String
+  topic        String?
+  mediaUrls    String[]
+  status       PostStatus @default(DRAFT)
+  createdAt    DateTime   @default(now())
+
+  variants PostVariant[]
+  user     User          @relation(fields: [userId], references: [id])
+}
+
+model PostVariant {
+  id             String        @id @default(uuid())
+  postId         String
+  platform       Platform
+  generatedText  String
+  approved       Boolean       @default(false)
+  publishedAt    DateTime?
+  scheduledFor   DateTime?
+  externalPostId String?
+  status         VariantStatus @default(PENDING)
+  errorLog       String?
+
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Subscription {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  stripeCustomerId String?
+  status           String
+  renewsAt         DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}
