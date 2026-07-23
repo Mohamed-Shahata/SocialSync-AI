@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -6,10 +6,10 @@ import {
   useEffect,
   useState,
   ReactNode,
-} from 'react';
-import { authApi, AuthUser } from './api';
+} from "react";
+import { authApi, AuthUser } from "./api";
 
-const TOKEN_KEY = 'accessToken';
+const TOKEN_KEY = "accessToken";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -18,6 +18,7 @@ interface AuthContextValue {
   register: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -78,9 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  // Re-fetches the current user (e.g. after editing the profile/avatar).
+  async function refreshUser() {
+    if (!token) return;
+    const me = await authApi.me(token);
+    setUser(me);
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, register, login, logout }}
+      value={{ user, token, isLoading, register, login, logout, refreshUser }}
     >
       {children}
     </AuthContext.Provider>
@@ -89,6 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }

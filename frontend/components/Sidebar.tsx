@@ -8,7 +8,7 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "My Posts", href: "/posts" },
   { label: "Create Post", href: "/posts/new" },
-  { label: "Settings", href: "#" },
+  { label: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar() {

@@ -31,6 +31,8 @@ export interface AuthUser {
   id: string;
   email: string;
   plan: string;
+  name?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AuthResponse {
@@ -115,6 +117,32 @@ async function requestForm<T>(
   }
   return data as T;
 }
+
+export const usersApi = {
+  updateProfile: (token: string, name: string) =>
+    request<AuthUser>("/users/me", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name }),
+    }),
+
+  changePassword: (
+    token: string,
+    currentPassword: string,
+    newPassword: string,
+  ) =>
+    request<{ message: string }>("/users/me/password", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  uploadAvatar: (token: string, file: File) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return requestForm<AuthUser>("/users/me/avatar", formData, token);
+  },
+};
 
 export const postsApi = {
   create: (
