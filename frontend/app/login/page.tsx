@@ -107,9 +107,12 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}
               trailingLink={
-                <a href="#" className="text-xs font-medium text-primary">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-primary"
+                >
                   نسيت كلمة المرور؟
-                </a>
+                </Link>
               }
               icon={
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none">

@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../lib/auth-context";
 
-const jakarta = Plus_Jakarta_Sans({
+const plexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ["arabic"],
   weight: ["400", "500", "600", "700"],
 });
+
+const jakarta = plexArabic;
+const inter = plexArabic;
 
 export const metadata: Metadata = {
   title: "PostAI — بوستاتك الجاهزة في ثواني",

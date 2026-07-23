@@ -57,6 +57,12 @@ model User {
   tokenVersion   Int      @default(0)
   createdAt      DateTime @default(now())
 
+  isVerified                  Boolean   @default(false)
+  verificationToken           String?   @unique
+  verificationTokenExpiresAt  DateTime?
+  resetPasswordToken          String?   @unique
+  resetPasswordTokenExpiresAt DateTime?
+
   socialAccounts SocialAccount[]
   posts          Post[]
   subscription   Subscription?

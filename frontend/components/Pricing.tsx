@@ -3,29 +3,22 @@ import Reveal from "./Reveal";
 
 const plans = [
   {
-    name: "مجاني",
-    price: "0",
-    desc: "عشان تجرب وتشوف الفكرة بتشتغل ازاي",
-    features: ["10 بوستات شهريًا", "منصة واحدة", "3 صياغات لكل فكرة"],
-    highlighted: false,
-  },
-  {
-    name: "برو",
-    price: "199",
-    desc: "لصناع المحتوى اللي بينشروا بثبات",
+    name: "خطة المحترفين",
+    price: "29",
     features: [
-      "بوستات غير محدودة",
-      "كل المنصات",
-      "جدولة تلقائية",
-      "أفكار مقترحة أسبوعيًا",
+      "منشورات غير محدودة",
+      "ربط جميع المنصات",
+      "ذكاء اصطناعي متطور جداً",
+      "تحليلات متقدمة ودقيقة",
     ],
+    cta: "اشترك الآن",
     highlighted: true,
   },
   {
-    name: "فريق",
-    price: "499",
-    desc: "لفريق المحتوى في شركتك",
-    features: ["كل مميزات برو", "حتى 5 أعضاء", "مراجعة قبل النشر", "دعم مباشر"],
+    name: "التجربة المجانية",
+    price: "0",
+    features: ["5 منشورات شهرياً", "منصة واحدة فقط", "ذكاء اصطناعي أساسي"],
+    cta: "ابدأ الآن",
     highlighted: false,
   },
 ];
@@ -40,12 +33,15 @@ export default function Pricing() {
               الأسعار
             </span>
             <h2 className="font-headline mt-3 text-3xl font-bold text-neutral sm:text-4xl">
-              خطة تناسب حجم شغلك
+              خطط تناسب طموحك
             </h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
+              اختر الخطة المناسبة وابدأ في تحويل تواجدك الرقمي اليوم.
+            </p>
           </div>
         </Reveal>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
+        <div className="mt-16 grid max-w-2xl gap-6 sm:mx-auto sm:grid-cols-2">
           {plans.map((plan, i) => (
             <Reveal key={plan.name} delay={i * 120}>
               <div
@@ -57,18 +53,17 @@ export default function Pricing() {
               >
                 {plan.highlighted && (
                   <span className="absolute -top-3 right-7 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-white">
-                    الأكتر طلبًا
+                    الأكثر طلبًا
                   </span>
                 )}
                 <h3 className="font-headline text-lg font-bold text-neutral">
                   {plan.name}
                 </h3>
-                <p className="mt-1 text-xs text-muted">{plan.desc}</p>
                 <div className="mt-5 flex items-baseline gap-1">
                   <span className="font-headline text-3xl font-extrabold text-neutral">
-                    {plan.price}
+                    $ {plan.price}
                   </span>
-                  <span className="text-sm text-muted">ج.م / شهريًا</span>
+                  <span className="text-sm text-muted">/ شهر</span>
                 </div>
 
                 <ul className="mt-6 flex flex-1 flex-col gap-3">
@@ -104,7 +99,7 @@ export default function Pricing() {
                       : "border border-surface-line text-neutral"
                   }`}
                 >
-                  ابدأ الآن
+                  {plan.cta}
                 </Link>
               </div>
             </Reveal>

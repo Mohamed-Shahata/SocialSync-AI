@@ -1,5 +1,5 @@
 import Link from "next/link";
-import GeneratorCard from "./GeneratorCard";
+import Image from "next/image";
 
 export default function Hero() {
   return (
@@ -16,21 +16,20 @@ export default function Hero() {
       <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-16 px-6 lg:flex-row lg:items-center lg:gap-8">
         <div className="flex-1 text-center lg:text-right">
           <span className="inline-flex items-center gap-2 rounded-full border border-surface-line bg-surface px-4 py-1.5 text-xs text-muted">
-            مبني لصنّاع المحتوى العربي
+            ✨ الجيل القادم من المحتوى الذكي
           </span>
 
           <h1 className="font-headline mt-6 text-4xl font-extrabold leading-[1.15] text-neutral sm:text-5xl lg:text-6xl">
-            فكرتك بتتحول لبوست
+            منصة واحدة لذكاء اصطناعي
             <br />
             <span className="bg-linear-to-l from-secondary via-primary-light to-tertiary bg-clip-text text-transparent">
-              جاهز للنشر
-            </span>{" "}
-            في ثواني
+              يتحدث لغة جمهورك
+            </span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-lg text-base leading-8 text-muted lg:mx-0">
-            PostAI بياخد فكرتك الخام ويطلعلك منشورات احترافية لفيسبوك وإنستجرام
-            وتيك توك، بصوتك انت وأسلوبك، من غير ما تقعد قدام صفحة فاضية.
+            حوّل أفكارك إلى محتوى إبداعي متميز على جميع منصات التواصل الاجتماعي
+            بلمسة واحدة، وبذكاء يفهم الثقافة العربية.
           </p>
 
           <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
@@ -38,13 +37,14 @@ export default function Hero() {
               href="/register"
               className="w-full rounded-full bg-primary hover:bg-primary-light px-7 py-3.5 text-center text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98] sm:w-auto"
             >
-              ابدأ مجانًا الآن
+              ابدأ رحلتك مجاناً
             </Link>
+
             <a
               href="#showcase"
               className="w-full rounded-full border border-surface-line px-7 py-3.5 text-center text-sm font-semibold text-neutral transition-colors hover:border-primary-light sm:w-auto"
             >
-              شوف مثال حي
+              مشاهدة العرض
             </a>
           </div>
 
@@ -73,7 +73,14 @@ export default function Hero() {
         </div>
 
         <div className="flex flex-1 justify-center">
-          <GeneratorCard />
+          <Image
+            src="/design/brain-icon.png"
+            alt="ذكاء اصطناعي متصل بمنصات التواصل الاجتماعي"
+            width={480}
+            height={480}
+            className="w-full max-w-md"
+            priority
+          />
         </div>
       </div>
     </section>

@@ -2,19 +2,22 @@ import Reveal from "./Reveal";
 
 const steps = [
   {
-    n: "01",
-    title: "اختار المنصة والنبرة",
-    desc: "حدد فيسبوك ولا إنستجرام ولا تيك توك، واختار نبرة الكلام: رسمية، ودّية، ولا فيها شوية كوميدي.",
+    title: "انطلق وانشر",
+    desc: "راجع المسودات المقترحة عدليًا، بلمسة، ثم جدولها للنشر في الوقت المثالي.",
+    tag: "جدولة ذكية",
+    highlighted: false,
   },
   {
-    n: "02",
-    title: "اكتب فكرتك زي ما هي",
-    desc: "مش محتاج صياغة ولا تنسيق، اكتب الفكرة بكلمتين أو تلاتة زي ما بتقولها لصاحبك.",
+    title: "حدد هدفك",
+    desc: "أخبر الذكاء الاصطناعي بنوع المحتوى أو الفكرة التي تدور في ذهنك باللغة العربية.",
+    tag: "معالجة فورية",
+    highlighted: true,
   },
   {
-    n: "03",
-    title: "استلم بوستات جاهزة",
-    desc: "PostAI بيطلعلك أكتر من صياغة، تختار اللي عاجبك، تعدّل لو حابب، وتنشر على طول.",
+    title: "اربط حساباتك",
+    desc: "قم بتوصيل حسابات التواصل الاجتماعي الخاصة بك في ثوان معدودة.",
+    tag: "جاهز في 2 دقيقة",
+    highlighted: false,
   },
 ];
 
@@ -24,27 +27,44 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <div className="text-center">
-            <span className="text-xs font-semibold uppercase tracking-widest text-secondary">
-              طريقة العمل
-            </span>
             <h2 className="font-headline mt-3 text-3xl font-bold text-neutral sm:text-4xl">
-              ثلاث خطوات، مش أكتر
+              كيف تعمل PostAI؟
             </h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
+              ثلاث خطوات بسيطة تفصلك عن احتراف النشر الرقمي.
+            </p>
           </div>
         </Reveal>
 
-        <div className="relative mt-16 grid gap-8 md:grid-cols-3">
-          <div className="pointer-events-none absolute top-10 hidden h-px w-full bg-gradient-to-l from-transparent via-surface-line to-transparent md:block" />
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
           {steps.map((step, i) => (
-            <Reveal key={step.n} delay={i * 120}>
-              <div className="relative rounded-2xl border border-surface-line bg-surface p-7">
-                <span className="font-headline block text-4xl font-extrabold text-transparent [-webkit-text-stroke:1.5px_var(--surface-line)]">
-                  {step.n}
+            <Reveal key={step.title} delay={i * 120}>
+              <div
+                className={`flex h-full flex-col justify-between rounded-2xl p-7 ${
+                  step.highlighted
+                    ? "bg-primary text-white"
+                    : "border border-surface-line bg-surface text-neutral"
+                }`}
+              >
+                <div>
+                  <h3 className="font-headline text-lg font-bold">
+                    {step.title}
+                  </h3>
+                  <p
+                    className={`mt-2 text-sm leading-7 ${
+                      step.highlighted ? "text-white/80" : "text-muted"
+                    }`}
+                  >
+                    {step.desc}
+                  </p>
+                </div>
+                <span
+                  className={`mt-6 text-xs font-semibold ${
+                    step.highlighted ? "text-white/70" : "text-muted"
+                  }`}
+                >
+                  {step.tag}
                 </span>
-                <h3 className="font-headline mt-4 text-lg font-bold text-neutral">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-7 text-muted">{step.desc}</p>
               </div>
             </Reveal>
           ))}
