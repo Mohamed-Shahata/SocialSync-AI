@@ -1,24 +1,17 @@
-import Reveal from "./Reveal";
+"use client";
 
-const outputs = [
-  {
-    platform: "Instagram",
-    color: "var(--tertiary)",
-    text: "معظم اللي بيبدأوا مشروعهم مش عندهم كل الإجابات… وده طبيعي. المهم إنك تبدأ بأول خطوة صح، والباقي بيتوضح وانت ماشي. 🚀",
-  },
-  {
-    platform: "Facebook",
-    color: "var(--primary)",
-    text: "سؤال بسيط: إيه اللي بيوقفك عن بداية مشروعك؟ اكتبلي في الكومنتات، وأنا هرد على كل واحد بنصيحة عملية.",
-  },
-  {
-    platform: "TikTok",
-    color: "var(--secondary)",
-    text: "3 حاجات محدش بيقولهملك قبل ما تبدأ مشروعك ⬇️ (الفيديو ده هيوفرلك شهور من التجربة والخطأ)",
-  },
-];
+import Reveal from "./Reveal";
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function Showcase() {
+  const { t } = useLanguage();
+
+  const outputs = [
+    { platform: "Instagram", color: "var(--tertiary)", text: t("showcase.ig") },
+    { platform: "Facebook", color: "var(--primary)", text: t("showcase.fb") },
+    { platform: "TikTok", color: "var(--secondary)", text: t("showcase.tt") },
+  ];
+
   return (
     <section id="showcase" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -26,21 +19,20 @@ export default function Showcase() {
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
             <div className="lg:sticky lg:top-32">
               <span className="text-xs font-semibold uppercase tracking-widest text-secondary">
-                شكل النتيجة
+                {t("showcase.label")}
               </span>
               <h2 className="font-headline mt-3 text-3xl font-bold leading-tight text-neutral sm:text-4xl">
-                فكرة واحدة… ثلاث
-                <br /> صياغات مختلفة
+                {t("showcase.title1")}
+                <br /> {t("showcase.title2")}
               </h2>
               <p className="mt-4 text-sm leading-7 text-muted">
-                اكتب فكرتك مرة واحدة، وPostAI بيحولها لصياغة مناسبة لكل منصة،
-                بنفس المعنى وأسلوب مختلف يناسب جمهور كل مكان.
+                {t("showcase.desc")}
               </p>
 
               <div className="mt-6 rounded-xl border border-surface-line bg-surface p-4">
-                <p className="text-xs text-muted">الفكرة اللي اتكتبت</p>
+                <p className="text-xs text-muted">{t("showcase.ideaLabel")}</p>
                 <p className="mt-2 text-sm leading-7 text-neutral/90">
-                  &ldquo;خايف تبدأ مشروعك؟ كلام عن أهمية اول خطوة&rdquo;
+                  &ldquo;{t("showcase.idea")}&rdquo;
                 </p>
               </div>
             </div>

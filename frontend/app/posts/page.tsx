@@ -5,13 +5,8 @@ import Link from "next/link";
 import { useAuth } from "../../lib/auth-context";
 import { postsApi, UserPost, Platform } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
-
-const statusLabels: Record<string, string> = {
-  DRAFT: "مسودة",
-  SCHEDULED: "مجدول",
-  PUBLISHED: "منشور",
-  FAILED: "فشل",
-};
+import { useLanguage } from "../../lib/i18n/language-context";
+import type { TranslationKey } from "../../lib/i18n/translations";
 
 const platformDot: Record<Platform, string> = {
   LINKEDIN: "bg-sky-500",
@@ -23,17 +18,26 @@ const platformDot: Record<Platform, string> = {
 
 type FilterKey = "ALL" | "PUBLISHED" | "DRAFT" | "SCHEDULED";
 
-const filters: { key: FilterKey; label: string }[] = [
-  { key: "ALL", label: "الكل" },
-  { key: "PUBLISHED", label: "المحتوى" },
-  { key: "DRAFT", label: "المسودة" },
-  { key: "SCHEDULED", label: "المجدول" },
-];
-
 const PAGE_SIZE = 5;
 
 export default function MyPostsPage() {
   const { user, token } = useAuth();
+  const { t, language } = useLanguage();
+
+  const statusLabels: Record<string, string> = {
+    DRAFT: t("status.DRAFT"),
+    SCHEDULED: t("status.SCHEDULED"),
+    PUBLISHED: t("status.PUBLISHED"),
+    FAILED: t("status.FAILED"),
+  };
+
+  const filters: { key: FilterKey; label: string }[] = [
+    { key: "ALL", label: t("posts.filterAll") },
+    { key: "PUBLISHED", label: t("posts.filterPublished") },
+    { key: "DRAFT", label: t("posts.filterDraft") },
+    { key: "SCHEDULED", label: t("posts.filterScheduled") },
+  ];
+
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -86,7 +90,7 @@ export default function MyPostsPage() {
               href="/posts/new"
               className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light"
             >
-              + بوست جديد
+              + {t("posts.newPost")}
             </Link>
           </div>
           <input
@@ -95,7 +99,7 @@ export default function MyPostsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="ابحث عن منشور..."
+            placeholder={t("posts.searchPlaceholder")}
             className="w-64 rounded-xl border border-surface-line bg-white px-4 py-2 text-sm outline-none focus:border-primary"
           />
         </div>
@@ -121,7 +125,7 @@ export default function MyPostsPage() {
         </div>
 
         {isLoading && (
-          <p className="mt-8 text-sm text-muted">...جاري التحميل</p>
+          <p className="mt-8 text-sm text-muted">{t("posts.loading")}</p>
         )}
 
         {!isLoading && (
@@ -132,6 +136,9 @@ export default function MyPostsPage() {
                 post={post}
                 onDelete={() => handleDelete(post.id)}
                 deleting={deletingId === post.id}
+                statusLabels={statusLabels}
+                t={t}
+                language={language}
               />
             ))}
 
@@ -143,14 +150,14 @@ export default function MyPostsPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-bg-soft text-lg">
                 +
               </span>
-              <p className="text-sm font-medium">إنشاء منشور جديد</p>
-              <p className="px-6 text-xs">ابدأ بإنشاء المنشور القادم</p>
+              <p className="text-sm font-medium">{t("posts.newCardTitle")}</p>
+              <p className="px-6 text-xs">{t("posts.newCardDesc")}</p>
             </Link>
           </div>
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <p className="mt-6 text-sm text-muted">مفيش بوستات لسه.</p>
+          <p className="mt-6 text-sm text-muted">{t("posts.empty")}</p>
         )}
 
         {/* Pagination */}
@@ -194,16 +201,25 @@ function PostCard({
   post,
   onDelete,
   deleting,
+  statusLabels,
+  t,
+  language,
 }: {
   post: UserPost;
   onDelete: () => void;
   deleting: boolean;
+  statusLabels: Record<string, string>;
+  t: (key: TranslationKey) => string;
+  language: string;
 }) {
-  const date = new Date(post.createdAt).toLocaleDateString("ar-EG", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const date = new Date(post.createdAt).toLocaleDateString(
+    language === "ar" ? "ar-EG" : "en-US",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    },
+  );
 
   return (
     <div className="overflow-hidden rounded-xl border border-surface-line bg-white">
@@ -217,10 +233,10 @@ function PostCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted">
-            بدون صورة
+            {t("posts.noImage")}
           </div>
         )}
-        <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
+        <span className="absolute end-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
           {statusLabels[post.status]}
         </span>
       </div>
@@ -240,7 +256,7 @@ function PostCard({
               <button
                 onClick={onDelete}
                 disabled={deleting}
-                title="حذف"
+                title={t("posts.delete")}
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
               >
                 🗑
@@ -248,13 +264,13 @@ function PostCard({
             )}
             <Link
               href={`/posts/${post.id}`}
-              title="تعديل"
+              title={t("posts.edit")}
               className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-soft text-muted hover:bg-surface-line"
             >
               ✎
             </Link>
           </div>
-          <div className="flex -space-x-1">
+          <div className="flex -space-x-1 rtl:space-x-reverse">
             {post.variants.map((v) => (
               <span
                 key={v.id}

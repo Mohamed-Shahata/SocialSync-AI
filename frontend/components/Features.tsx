@@ -1,31 +1,35 @@
+"use client";
+
 import Image from "next/image";
 import Reveal from "./Reveal";
-
-const features = [
-  {
-    title: "حماية وخصوصية مطلقة",
-    desc: "بياناتك وهويتك هي أولويتنا القصوى. نستخدم بروتوكولات تشفير عسكرية لضمان أمان حساباتك ومحتواك.",
-    img: "/design/lock-icon.png",
-  },
-  {
-    title: "توليد محتوى ذكي",
-    desc: "خوارزميات متطورة تحلل التوجهات الحالية وتنشئ منشورات جذابة متوافقة مع هويتك البصرية والصوتية.",
-    img: "/design/wand-icon.png",
-  },
-];
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function Features() {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      title: t("features.t1"),
+      desc: t("features.d1"),
+      img: "/design/lock-icon.png",
+    },
+    {
+      title: t("features.t2"),
+      desc: t("features.d2"),
+      img: "/design/wand-icon.png",
+    },
+  ];
+
   return (
     <section id="features" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <div className="text-center">
             <h2 className="font-headline text-3xl font-bold text-neutral sm:text-4xl">
-              مميزات صُممت لنموك
+              {t("features.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
-              نحن ندمج أحدث تقنيات الذكاء الاصطناعي مع واجهة مستخدم سلسة لتوفر
-              لك تجربة لا مثيل لها.
+              {t("features.desc")}
             </p>
           </div>
         </Reveal>

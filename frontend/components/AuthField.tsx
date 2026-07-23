@@ -21,12 +21,12 @@ export default function AuthField({
         {trailingLink}
       </div>
       <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted">
+        <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-muted">
           {icon}
         </span>
         <input
           {...props}
-          className="w-full rounded-xl border border-surface-line bg-bg-soft py-2.5 pr-10 pl-3 text-sm text-neutral outline-none transition-colors placeholder:text-muted/70 focus:border-primary-light focus:bg-white"
+          className="w-full rounded-xl border border-surface-line bg-bg-soft py-2.5 pe-10 ps-3 text-sm text-neutral outline-none transition-colors placeholder:text-muted/70 focus:border-primary-light focus:bg-white"
         />
       </div>
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

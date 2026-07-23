@@ -1,37 +1,42 @@
-import Reveal from "./Reveal";
+"use client";
 
-const steps = [
-  {
-    title: "انطلق وانشر",
-    desc: "راجع المسودات المقترحة عدليًا، بلمسة، ثم جدولها للنشر في الوقت المثالي.",
-    tag: "جدولة ذكية",
-    highlighted: false,
-  },
-  {
-    title: "حدد هدفك",
-    desc: "أخبر الذكاء الاصطناعي بنوع المحتوى أو الفكرة التي تدور في ذهنك باللغة العربية.",
-    tag: "معالجة فورية",
-    highlighted: true,
-  },
-  {
-    title: "اربط حساباتك",
-    desc: "قم بتوصيل حسابات التواصل الاجتماعي الخاصة بك في ثوان معدودة.",
-    tag: "جاهز في 2 دقيقة",
-    highlighted: false,
-  },
-];
+import Reveal from "./Reveal";
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function HowItWorks() {
+  const { t } = useLanguage();
+
+  const steps = [
+    {
+      title: t("how.s3t"),
+      desc: t("how.s3d"),
+      tag: t("how.s3tag"),
+      highlighted: false,
+    },
+    {
+      title: t("how.s1t"),
+      desc: t("how.s1d"),
+      tag: t("how.s1tag"),
+      highlighted: true,
+    },
+    {
+      title: t("how.s2t"),
+      desc: t("how.s2d"),
+      tag: t("how.s2tag"),
+      highlighted: false,
+    },
+  ];
+
   return (
     <section id="how" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <div className="text-center">
             <h2 className="font-headline mt-3 text-3xl font-bold text-neutral sm:text-4xl">
-              كيف تعمل PostAI؟
+              {t("how.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
-              ثلاث خطوات بسيطة تفصلك عن احتراف النشر الرقمي.
+              {t("how.desc")}
             </p>
           </div>
         </Reveal>

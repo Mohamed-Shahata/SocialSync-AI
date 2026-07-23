@@ -1,53 +1,57 @@
-import Link from "next/link";
+"use client";
 
-const columns = [
-  {
-    title: "المنتج",
-    links: [
-      { label: "المميزات", href: "#features" },
-      { label: "طريقة العمل", href: "#how" },
-      { label: "الأسعار", href: "#pricing" },
-    ],
-  },
-  {
-    title: "الشركة",
-    links: [
-      { label: "تواصل معنا", href: "#" },
-      { label: "الوظائف", href: "#" },
-      { label: "المدونة", href: "#" },
-    ],
-  },
-  {
-    title: "قانوني",
-    links: [
-      { label: "سياسة الخصوصية", href: "#" },
-      { label: "الشروط والأحكام", href: "#" },
-    ],
-  },
-];
+import Link from "next/link";
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function Footer() {
+  const { t } = useLanguage();
+
+  const columns = [
+    {
+      title: t("footer.product"),
+      links: [
+        { label: t("nav.features"), href: "#features" },
+        { label: t("nav.how"), href: "#how" },
+        { label: t("nav.pricing"), href: "#pricing" },
+      ],
+    },
+    {
+      title: t("footer.company"),
+      links: [
+        { label: t("footer.contact"), href: "#" },
+        { label: t("footer.careers"), href: "#" },
+        { label: t("footer.blog"), href: "#" },
+      ],
+    },
+    {
+      title: t("footer.legal"),
+      links: [
+        { label: t("footer.privacy"), href: "#" },
+        { label: t("footer.terms"), href: "#" },
+      ],
+    },
+  ];
+
   return (
     <footer className="relative border-t border-surface-line py-14">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <Link href="#" className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-tertiary to-secondary text-sm font-bold text-white font-headline">
-                P
-              </span>
               <span className="font-headline text-lg font-bold text-neutral">
-                Post<span className="text-secondary">AI</span>
+                Omni<span className="text-secondary">Post</span>
               </span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-7 text-muted">
-              أداة عربية بتحول أفكارك لبوستات جاهزة للنشر على السوشيال ميديا، في ثواني.
+              {t("footer.desc")}
             </p>
           </div>
 
           {columns.map((col) => (
             <div key={col.title}>
-              <h4 className="text-sm font-semibold text-neutral">{col.title}</h4>
+              <h4 className="text-sm font-semibold text-neutral">
+                {col.title}
+              </h4>
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((l) => (
                   <li key={l.label}>
@@ -66,10 +70,14 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-surface-line pt-6 sm:flex-row">
           <p className="text-xs text-muted">
-            © {new Date().getFullYear()} PostAI. كل الحقوق محفوظة.
+            © {new Date().getFullYear()} OmniPost. {t("footer.rights")}
           </p>
           <div className="flex items-center gap-4">
-            {["فيسبوك", "إنستجرام", "تيك توك"].map((s) => (
+            {[
+              t("footer.facebook"),
+              t("footer.instagram"),
+              t("footer.tiktok"),
+            ].map((s) => (
               <a
                 key={s}
                 href="#"

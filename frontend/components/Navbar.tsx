@@ -2,20 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "../lib/auth-context";
-
-const links = [
-  { href: "#how", label: "طريقة العمل" },
-  { href: "#features", label: "المميزات" },
-  { href: "#showcase", label: "شكل النتيجة" },
-  { href: "#pricing", label: "الأسعار" },
-];
+import { useLanguage } from "../lib/i18n/language-context";
+import LanguageToggle from "./LanguageToggle";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { token, isLoading } = useAuth();
+  const { t } = useLanguage();
   const isAuthed = !isLoading && !!token;
+
+  const links = [
+    { href: "#how", label: t("nav.how") },
+    { href: "#features", label: t("nav.features") },
+    { href: "#showcase", label: t("nav.showcase") },
+    { href: "#pricing", label: t("nav.pricing") },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -34,11 +38,15 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="#" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-primary via-tertiary to-secondary text-sm font-bold text-white font-headline">
-            P
-          </span>
+          <Image
+            src="/design/omnipost-logo.png"
+            alt="OmniPost"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
+          />
           <span className="font-headline text-lg font-bold text-neutral">
-            Post<span className="text-secondary">AI</span>
+            Omni<span className="text-secondary">Post</span>
           </span>
         </Link>
 
@@ -55,12 +63,13 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <LanguageToggle />
           {isAuthed ? (
             <Link
               href="/dashboard"
               className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
             >
-              لوحة التحكم
+              {t("nav.dashboard")}
             </Link>
           ) : (
             <>
@@ -68,42 +77,45 @@ export default function Navbar() {
                 href="/login"
                 className="text-sm text-muted transition-colors hover:text-neutral"
               >
-                تسجيل الدخول
+                {t("nav.login")}
               </Link>
               <Link
                 href="/register"
                 className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
               >
-                جرّب مجانًا
+                {t("nav.register")}
               </Link>
             </>
           )}
         </div>
 
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-line text-neutral md:hidden"
-          aria-label="فتح القائمة"
-          aria-expanded={open}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            {open ? (
-              <path
-                d="M2 2L16 16M16 2L2 16"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            ) : (
-              <path
-                d="M1 4H17M1 9H17M1 14H17"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            )}
-          </svg>
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <LanguageToggle />
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-line text-neutral"
+            aria-label={t("nav.openMenu")}
+            aria-expanded={open}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              {open ? (
+                <path
+                  d="M2 2L16 16M16 2L2 16"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M1 4H17M1 9H17M1 14H17"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -125,18 +137,18 @@ export default function Navbar() {
                   href="/dashboard"
                   className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-center text-sm font-semibold text-white"
                 >
-                  لوحة التحكم
+                  {t("nav.dashboard")}
                 </Link>
               ) : (
                 <>
                   <Link href="/login" className="text-sm text-muted">
-                    تسجيل الدخول
+                    {t("nav.login")}
                   </Link>
                   <Link
                     href="/register"
                     className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-center text-sm font-semibold text-white"
                   >
-                    جرّب مجانًا
+                    {t("nav.register")}
                   </Link>
                 </>
               )}

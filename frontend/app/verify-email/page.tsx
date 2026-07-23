@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 
 function VerifyEmailStatus() {
   const token = useSearchParams().get("token") ?? "";
   const router = useRouter();
   const { token: authToken, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!authLoading && authToken) {
@@ -26,7 +28,7 @@ function VerifyEmailStatus() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("رابط التفعيل غير صالح");
+      setMessage(t("verify.invalidLink"));
       return;
     }
 
@@ -36,9 +38,10 @@ function VerifyEmailStatus() {
       .catch((err) => {
         setStatus("error");
         setMessage(
-          err instanceof ApiError ? err.message : "الرابط غير صالح أو منتهي",
+          err instanceof ApiError ? err.message : t("verify.invalidOrExpired"),
         );
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -49,22 +52,20 @@ function VerifyEmailStatus() {
         </div>
 
         {status === "loading" && (
-          <p className="mt-7 text-sm text-muted">...جاري تفعيل حسابك</p>
+          <p className="mt-7 text-sm text-muted">{t("verify.loading")}</p>
         )}
 
         {status === "success" && (
           <>
             <h1 className="font-headline mt-7 text-2xl font-bold text-neutral">
-              تم تفعيل حسابك 🎉
+              {t("verify.successTitle")}
             </h1>
-            <p className="mt-2 text-sm text-muted">
-              تقدر دلوقتي تسجل الدخول وتبدأ تستخدم PostAI.
-            </p>
+            <p className="mt-2 text-sm text-muted">{t("verify.successDesc")}</p>
             <Link
               href="/login"
               className="mt-6 inline-block w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
             >
-              تسجيل الدخول
+              {t("verify.login")}
             </Link>
           </>
         )}
@@ -72,14 +73,14 @@ function VerifyEmailStatus() {
         {status === "error" && (
           <>
             <h1 className="font-headline mt-7 text-2xl font-bold text-neutral">
-              الرابط مش شغال
+              {t("verify.errorTitle")}
             </h1>
             <p className="mt-2 text-sm text-muted">{message}</p>
             <Link
               href="/login"
               className="mt-6 inline-block text-sm font-semibold text-primary"
             >
-              الرجوع لتسجيل الدخول
+              {t("verify.backLogin")}
             </Link>
           </>
         )}

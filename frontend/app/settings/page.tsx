@@ -4,9 +4,11 @@ import { useRef, useState, FormEvent } from "react";
 import { useAuth } from "../../lib/auth-context";
 import { usersApi, ApiError } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
+import { useLanguage } from "../../lib/i18n/language-context";
 
 export default function SettingsPage() {
   const { user, token, refreshUser } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(user?.name ?? "");
@@ -37,7 +39,9 @@ export default function SettingsPage() {
       setNameStatus("saved");
       setTimeout(() => setNameStatus("idle"), 2000);
     } catch (err) {
-      setNameError(err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني");
+      setNameError(
+        err instanceof ApiError ? err.message : t("settings.genericError"),
+      );
       setNameStatus("idle");
     }
   }
@@ -48,7 +52,7 @@ export default function SettingsPage() {
     setPasswordError("");
 
     if (newPassword !== confirmPassword) {
-      setPasswordError("كلمتا المرور غير متطابقتين");
+      setPasswordError(t("settings.mismatch"));
       return;
     }
 
@@ -62,7 +66,7 @@ export default function SettingsPage() {
       setTimeout(() => setPasswordStatus("idle"), 2000);
     } catch (err) {
       setPasswordError(
-        err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني",
+        err instanceof ApiError ? err.message : t("settings.genericError"),
       );
       setPasswordStatus("idle");
     }
@@ -77,7 +81,7 @@ export default function SettingsPage() {
       await refreshUser();
     } catch (err) {
       setAvatarError(
-        err instanceof ApiError ? err.message : "حصل خطأ أثناء رفع الصورة",
+        err instanceof ApiError ? err.message : t("settings.avatarError"),
       );
     } finally {
       setIsUploadingAvatar(false);
@@ -88,13 +92,47 @@ export default function SettingsPage() {
     <DashboardShell>
       <div className="mx-auto max-w-2xl">
         <h1 className="font-headline text-2xl font-bold text-neutral">
-          الإعدادات
+          {t("settings.title")}
         </h1>
+
+        {/* Language */}
+        <div className="mt-6 rounded-xl border border-surface-line bg-white p-5">
+          <h2 className="font-headline text-lg font-semibold text-neutral">
+            {t("settings.language")}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {t("settings.languageDesc")}
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setLanguage("ar")}
+              className={`rounded-xl border py-2.5 text-sm font-medium transition-colors ${
+                language === "ar"
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-surface-line text-muted hover:bg-bg-soft"
+              }`}
+            >
+              العربية
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`rounded-xl border py-2.5 text-sm font-medium transition-colors ${
+                language === "en"
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-surface-line text-muted hover:bg-bg-soft"
+              }`}
+            >
+              English
+            </button>
+          </div>
+        </div>
 
         {/* Avatar */}
         <div className="mt-6 rounded-xl border border-surface-line bg-white p-5">
           <h2 className="font-headline text-lg font-semibold text-neutral">
-            الصورة الشخصية
+            {t("settings.avatar")}
           </h2>
           <div className="mt-4 flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-bg-soft text-lg font-semibold text-muted">
@@ -116,7 +154,9 @@ export default function SettingsPage() {
                 disabled={isUploadingAvatar}
                 className="rounded-xl border border-surface-line px-4 py-2 text-sm font-medium text-neutral hover:bg-bg-soft disabled:opacity-50"
               >
-                {isUploadingAvatar ? "...جاري الرفع" : "تغيير الصورة"}
+                {isUploadingAvatar
+                  ? t("settings.uploading")
+                  : t("settings.changeAvatar")}
               </button>
               <input
                 ref={fileInputRef}
@@ -138,17 +178,17 @@ export default function SettingsPage() {
           className="mt-6 rounded-xl border border-surface-line bg-white p-5"
         >
           <h2 className="font-headline text-lg font-semibold text-neutral">
-            الاسم
+            {t("settings.nameTitle")}
           </h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="mb-1.5 block text-sm font-medium text-neutral">
-                الاسم الكامل
+                {t("settings.fullName")}
               </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="أدخل اسمك"
+                placeholder={t("settings.namePlaceholder")}
                 className="w-full rounded-xl border border-surface-line bg-bg-soft px-3 py-2.5 text-sm text-neutral outline-none focus:border-primary-light focus:bg-white"
               />
             </div>
@@ -158,10 +198,10 @@ export default function SettingsPage() {
               className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-light disabled:opacity-50"
             >
               {nameStatus === "saving"
-                ? "...جاري الحفظ"
+                ? t("settings.saving")
                 : nameStatus === "saved"
-                  ? "تم الحفظ ✓"
-                  : "حفظ"}
+                  ? t("settings.saved")
+                  : t("settings.save")}
             </button>
           </div>
           {nameError && (
@@ -175,12 +215,12 @@ export default function SettingsPage() {
           className="mt-6 rounded-xl border border-surface-line bg-white p-5"
         >
           <h2 className="font-headline text-lg font-semibold text-neutral">
-            تغيير كلمة المرور
+            {t("settings.passwordTitle")}
           </h2>
           <div className="mt-4 flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral">
-                كلمة المرور الحالية
+                {t("settings.currentPassword")}
               </label>
               <input
                 type="password"
@@ -193,7 +233,7 @@ export default function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-neutral">
-                  كلمة المرور الجديدة
+                  {t("settings.newPassword")}
                 </label>
                 <input
                   type="password"
@@ -205,7 +245,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-neutral">
-                  تأكيد كلمة المرور
+                  {t("settings.confirmPassword")}
                 </label>
                 <input
                   type="password"
@@ -227,10 +267,10 @@ export default function SettingsPage() {
               className="self-start rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-light disabled:opacity-50"
             >
               {passwordStatus === "saving"
-                ? "...جاري الحفظ"
+                ? t("settings.saving")
                 : passwordStatus === "saved"
-                  ? "تم التغيير ✓"
-                  : "تغيير كلمة المرور"}
+                  ? t("settings.passwordChanged")
+                  : t("settings.changePassword")}
             </button>
           </div>
         </form>

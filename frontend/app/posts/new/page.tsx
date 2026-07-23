@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../lib/auth-context";
 import { postsApi, ApiError, Platform } from "../../../lib/api";
 import DashboardShell from "../../../components/DashboardShell";
+import { useLanguage } from "../../../lib/i18n/language-context";
 
 const platforms: { id: Platform; label: string }[] = [
   { id: "LINKEDIN", label: "LinkedIn" },
@@ -17,6 +18,7 @@ const platforms: { id: Platform; label: string }[] = [
 export default function NewPostPage() {
   const { token } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<Platform[]>([]);
@@ -36,7 +38,7 @@ export default function NewPostPage() {
 
     if (!token) return;
     if (!text.trim()) {
-      setError("اكتب نص البوست");
+      setError(t("newPost.emptyError"));
       return;
     }
 
@@ -45,7 +47,9 @@ export default function NewPostPage() {
       await postsApi.create(token, text, selected, files);
       router.push("/posts");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني");
+      setError(
+        err instanceof ApiError ? err.message : t("newPost.genericError"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +59,7 @@ export default function NewPostPage() {
     <DashboardShell>
       <div className="mx-auto flex max-w-2xl flex-1 flex-col">
         <h1 className="font-headline text-2xl font-bold text-neutral">
-          إنشاء بوست جديد
+          {t("newPost.title")}
         </h1>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
@@ -67,20 +71,20 @@ export default function NewPostPage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral">
-              نص البوست
+              {t("newPost.textLabel")}
             </label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={6}
-              placeholder="اكتب فكرتك هنا..."
+              placeholder={t("newPost.textPlaceholder")}
               className="w-full rounded-xl border border-surface-line bg-bg-soft p-3 text-sm text-neutral outline-none focus:border-primary-light focus:bg-white"
             />
           </div>
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral">
-              انشر على
+              {t("newPost.postOn")}
             </label>
             <div className="flex flex-wrap gap-2">
               {platforms.map((p) => (
@@ -102,18 +106,18 @@ export default function NewPostPage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral">
-              صور / فيديوهات (اختياري)
+              {t("newPost.mediaLabel")}
             </label>
             <input
               type="file"
               accept="image/*,video/*"
               multiple
               onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-              className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary"
+              className="block w-full text-sm text-muted file:me-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary"
             />
             {files.length > 0 && (
               <p className="mt-1 text-xs text-muted">
-                {files.length} ملف تم اختياره
+                {files.length} {t("newPost.filesSelected")}
               </p>
             )}
           </div>
@@ -123,7 +127,7 @@ export default function NewPostPage() {
             disabled={isSubmitting}
             className="mt-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-light disabled:opacity-50"
           >
-            {isSubmitting ? "...جاري الحفظ" : "حفظ كمسودة"}
+            {isSubmitting ? t("newPost.saving") : t("newPost.save")}
           </button>
         </form>
       </div>

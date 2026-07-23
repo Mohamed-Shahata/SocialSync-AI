@@ -6,11 +6,13 @@ import Link from "next/link";
 import { useAuth } from "../../../lib/auth-context";
 import { postsApi, UserPost } from "../../../lib/api";
 import DashboardShell from "../../../components/DashboardShell";
+import { useLanguage } from "../../../lib/i18n/language-context";
 
 export default function EditPostPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const { t } = useLanguage();
 
   const [post, setPost] = useState<UserPost | null>(null);
   const [text, setText] = useState("");
@@ -38,7 +40,7 @@ export default function EditPostPage() {
       await postsApi.update(token, post.id, text);
       router.push("/posts");
     } catch {
-      setError("حصل خطأ أثناء الحفظ، حاول تاني.");
+      setError(t("editPost.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -48,7 +50,7 @@ export default function EditPostPage() {
     return (
       <DashboardShell>
         <div className="mx-auto max-w-2xl text-sm text-muted">
-          ...جاري التحميل
+          {t("editPost.loading")}
         </div>
       </DashboardShell>
     );
@@ -58,12 +60,12 @@ export default function EditPostPage() {
     return (
       <DashboardShell>
         <div className="mx-auto max-w-2xl">
-          <p className="text-sm text-muted">البوست ده مش موجود.</p>
+          <p className="text-sm text-muted">{t("editPost.notFound")}</p>
           <Link
             href="/posts"
             className="mt-4 inline-block text-sm text-primary"
           >
-            ← الرجوع للبوستات
+            {t("editPost.back")}
           </Link>
         </div>
       </DashboardShell>
@@ -75,10 +77,10 @@ export default function EditPostPage() {
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
           <h1 className="font-headline text-2xl font-bold text-neutral">
-            تعديل البوست
+            {t("editPost.title")}
           </h1>
           <Link href="/posts" className="text-sm text-muted hover:text-neutral">
-            إلغاء
+            {t("editPost.cancel")}
           </Link>
         </div>
 
@@ -110,7 +112,7 @@ export default function EditPostPage() {
             disabled={isSaving || !text.trim()}
             className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-light disabled:opacity-50"
           >
-            {isSaving ? "...جاري الحفظ" : "حفظ التعديلات"}
+            {isSaving ? t("editPost.saving") : t("editPost.save")}
           </button>
         </div>
       </div>

@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
 import { validateEmail } from "../../lib/validation";
 import { useAuth } from "../../lib/auth-context";
+import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const { token, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!authLoading && token) {
@@ -39,7 +41,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch (err) {
       setServerError(
-        err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني",
+        err instanceof ApiError ? err.message : t("auth.genericError"),
       );
     } finally {
       setIsSubmitting(false);
@@ -52,15 +54,13 @@ export default function ForgotPasswordPage() {
         <AuthLogo />
 
         <h1 className="font-headline mt-7 text-2xl font-bold text-neutral">
-          نسيت كلمة المرور؟
+          {t("forgot.title")}
         </h1>
-        <p className="mt-1.5 text-sm text-muted">
-          اكتب إيميلك وهنبعتلك رابط تعمل بيه كلمة مرور جديدة.
-        </p>
+        <p className="mt-1.5 text-sm text-muted">{t("forgot.subtitle")}</p>
 
         {sent ? (
           <p className="mt-7 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-700">
-            لو الإيميل ده مسجل عندنا، هتلاقي رابط إعادة التعيين في بريدك دلوقتي.
+            {t("forgot.sent")}
           </p>
         ) : (
           <form
@@ -75,9 +75,9 @@ export default function ForgotPasswordPage() {
             )}
 
             <AuthField
-              label="البريد الإلكتروني"
+              label={t("auth.email")}
               type="email"
-              placeholder="example@postai.com"
+              placeholder="example@omnipost.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={error}
@@ -103,15 +103,15 @@ export default function ForgotPasswordPage() {
               disabled={isSubmitting}
               className="mt-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-light disabled:opacity-50"
             >
-              {isSubmitting ? "...جاري الإرسال" : "إرسال رابط إعادة التعيين"}
+              {isSubmitting ? t("forgot.submitting") : t("forgot.submit")}
             </button>
           </form>
         )}
 
         <p className="mt-6 text-center text-sm text-muted">
-          افتكرت كلمة المرور؟{" "}
+          {t("forgot.remembered")}{" "}
           <Link href="/login" className="font-semibold text-primary">
-            تسجيل الدخول
+            {t("forgot.backLogin")}
           </Link>
         </p>
       </div>

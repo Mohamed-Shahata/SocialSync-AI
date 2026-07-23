@@ -6,17 +6,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { validateEmail, validatePassword } from "../../lib/validation";
 import { ApiError } from "../../lib/api";
+import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 import AiBrainIllustration from "../../components/AiBrainIllustration";
 
-const accountTypes = [
-  { id: "individual", label: "فرد" },
-  { id: "business", label: "شركة" },
-];
-
 export default function RegisterPage() {
   const { register, token, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +21,11 @@ export default function RegisterPage() {
       router.replace("/dashboard");
     }
   }, [authLoading, token, router]);
+
+  const accountTypes = [
+    { id: "individual", label: t("register.individual") },
+    { id: "business", label: t("register.business") },
+  ];
 
   const [accountType, setAccountType] = useState("individual");
   const [fullName, setFullName] = useState("");
@@ -57,7 +59,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
     } catch (err) {
       setServerError(
-        err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني",
+        err instanceof ApiError ? err.message : t("auth.genericError"),
       );
     } finally {
       setIsSubmitting(false);
@@ -72,11 +74,9 @@ export default function RegisterPage() {
           <AuthLogo />
 
           <h1 className="font-headline mt-7 text-2xl font-bold text-neutral">
-            إنشاء حساب جديد في PostAI
+            {t("register.title")}
           </h1>
-          <p className="mt-1.5 text-sm text-muted">
-            انضم إلى مستقبل المحتوى، وابدأ تنشر بذكاء.
-          </p>
+          <p className="mt-1.5 text-sm text-muted">{t("register.subtitle")}</p>
 
           <form
             onSubmit={handleSubmit}
@@ -91,30 +91,30 @@ export default function RegisterPage() {
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral">
-                أنت مستخدم
+                {t("register.userType")}
               </label>
               <div className="grid grid-cols-2 gap-3">
-                {accountTypes.map((t) => (
+                {accountTypes.map((ty) => (
                   <button
-                    key={t.id}
+                    key={ty.id}
                     type="button"
-                    onClick={() => setAccountType(t.id)}
+                    onClick={() => setAccountType(ty.id)}
                     className={`rounded-xl border py-2.5 text-sm font-medium transition-colors ${
-                      accountType === t.id
+                      accountType === ty.id
                         ? "border-primary bg-primary/5 text-primary"
                         : "border-surface-line text-muted hover:bg-bg-soft"
                     }`}
                   >
-                    {t.label}
+                    {ty.label}
                   </button>
                 ))}
               </div>
             </div>
 
             <AuthField
-              label="الاسم الكامل"
+              label={t("register.fullName")}
               type="text"
-              placeholder="أدخل اسمك بالكامل"
+              placeholder={t("register.fullNamePlaceholder")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               icon={
@@ -137,9 +137,9 @@ export default function RegisterPage() {
             />
 
             <AuthField
-              label="البريد الإلكتروني"
+              label={t("auth.email")}
               type="email"
-              placeholder="example@postai.com"
+              placeholder="example@omnipost.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -161,7 +161,7 @@ export default function RegisterPage() {
             />
 
             <AuthField
-              label="كلمة المرور"
+              label={t("auth.password")}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -193,13 +193,13 @@ export default function RegisterPage() {
                 required
                 className="mt-0.5 h-3.5 w-3.5 rounded border-surface-line accent-primary"
               />
-              أوافق على{" "}
+              {t("register.agree")}{" "}
               <a href="#" className="text-primary">
-                الشروط والأحكام
+                {t("register.terms")}
               </a>{" "}
-              و
+              {t("register.and")}{" "}
               <a href="#" className="text-primary">
-                سياسة الخصوصية
+                {t("register.privacy")}
               </a>
             </label>
 
@@ -208,14 +208,14 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="mt-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-light disabled:opacity-50"
             >
-              {isSubmitting ? "...جاري الإنشاء" : "إنشاء حساب"}
+              {isSubmitting ? t("register.submitting") : t("register.submit")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted">
-            لديك حساب بالفعل؟{" "}
+            {t("register.haveAccount")}{" "}
             <Link href="/login" className="font-semibold text-primary">
-              سجل دخولك
+              {t("register.loginNow")}
             </Link>
           </p>
         </div>
@@ -230,11 +230,10 @@ export default function RegisterPage() {
 
           <div className="relative rounded-2xl bg-white/70 p-5 backdrop-blur-sm">
             <h2 className="font-headline text-xl font-bold text-neutral">
-              قوة الذكاء الاصطناعي بين يديك
+              {t("register.heroTitle")}
             </h2>
             <p className="mt-2 text-sm leading-7 text-muted">
-              انضم لآلاف صنّاع المحتوى اللي بيستخدموا PostAI لتحويل أفكارهم
-              بسرعة لاستراتيجية محتوى كاملة.
+              {t("register.heroDesc")}
             </p>
           </div>
         </div>

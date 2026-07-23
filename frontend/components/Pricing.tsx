@@ -1,42 +1,47 @@
+"use client";
+
 import Link from "next/link";
 import Reveal from "./Reveal";
-
-const plans = [
-  {
-    name: "خطة المحترفين",
-    price: "29",
-    features: [
-      "منشورات غير محدودة",
-      "ربط جميع المنصات",
-      "ذكاء اصطناعي متطور جداً",
-      "تحليلات متقدمة ودقيقة",
-    ],
-    cta: "اشترك الآن",
-    highlighted: true,
-  },
-  {
-    name: "التجربة المجانية",
-    price: "0",
-    features: ["5 منشورات شهرياً", "منصة واحدة فقط", "ذكاء اصطناعي أساسي"],
-    cta: "ابدأ الآن",
-    highlighted: false,
-  },
-];
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function Pricing() {
+  const { t } = useLanguage();
+
+  const plans = [
+    {
+      name: t("pricing.pro"),
+      price: "29",
+      features: [
+        t("pricing.proF1"),
+        t("pricing.proF2"),
+        t("pricing.proF3"),
+        t("pricing.proF4"),
+      ],
+      cta: t("pricing.proCta"),
+      highlighted: true,
+    },
+    {
+      name: t("pricing.free"),
+      price: "0",
+      features: [t("pricing.freeF1"), t("pricing.freeF2"), t("pricing.freeF3")],
+      cta: t("pricing.freeCta"),
+      highlighted: false,
+    },
+  ];
+
   return (
     <section id="pricing" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
           <div className="text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-secondary">
-              الأسعار
+              {t("pricing.label")}
             </span>
             <h2 className="font-headline mt-3 text-3xl font-bold text-neutral sm:text-4xl">
-              خطط تناسب طموحك
+              {t("pricing.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
-              اختر الخطة المناسبة وابدأ في تحويل تواجدك الرقمي اليوم.
+              {t("pricing.desc")}
             </p>
           </div>
         </Reveal>
@@ -52,8 +57,8 @@ export default function Pricing() {
                 }`}
               >
                 {plan.highlighted && (
-                  <span className="absolute -top-3 right-7 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-white">
-                    الأكثر طلبًا
+                  <span className="absolute -top-3 end-7 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-white">
+                    {t("pricing.popular")}
                   </span>
                 )}
                 <h3 className="font-headline text-lg font-bold text-neutral">
@@ -63,7 +68,9 @@ export default function Pricing() {
                   <span className="font-headline text-3xl font-extrabold text-neutral">
                     $ {plan.price}
                   </span>
-                  <span className="text-sm text-muted">/ شهر</span>
+                  <span className="text-sm text-muted">
+                    {t("pricing.perMonth")}
+                  </span>
                 </div>
 
                 <ul className="mt-6 flex flex-1 flex-col gap-3">

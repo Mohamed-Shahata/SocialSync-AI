@@ -5,16 +5,18 @@ import Link from "next/link";
 import { useAuth } from "../../lib/auth-context";
 import { postsApi, UserPost } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
-
-const statusLabels: Record<string, string> = {
-  DRAFT: "مسودة",
-  SCHEDULED: "مجدول",
-  PUBLISHED: "منشور",
-  FAILED: "فشل",
-};
+import { useLanguage } from "../../lib/i18n/language-context";
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
+
+  const statusLabels: Record<string, string> = {
+    DRAFT: t("status.DRAFT"),
+    SCHEDULED: t("status.SCHEDULED"),
+    PUBLISHED: t("status.PUBLISHED"),
+    FAILED: t("status.FAILED"),
+  };
 
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,42 +44,42 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between">
           <h1 className="font-headline text-2xl font-bold text-neutral">
-            أهلاً بيك، {user?.email}
+            {t("dash.welcome")} {user?.email}
           </h1>
           <Link
             href="/posts/new"
             className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light"
           >
-            + بوست جديد
+            + {t("dash.newPost")}
           </Link>
         </div>
 
         {isLoading ? (
-          <p className="mt-8 text-sm text-muted">...جاري التحميل</p>
+          <p className="mt-8 text-sm text-muted">{t("dash.loading")}</p>
         ) : (
           <>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <StatCard label="إجمالي البوستات" value={stats.total} />
-              <StatCard label="منشورة" value={stats.published} />
-              <StatCard label="مجدولة" value={stats.scheduled} />
-              <StatCard label="مسودات" value={stats.draft} />
+              <StatCard label={t("dash.total")} value={stats.total} />
+              <StatCard label={t("dash.published")} value={stats.published} />
+              <StatCard label={t("dash.scheduled")} value={stats.scheduled} />
+              <StatCard label={t("dash.draft")} value={stats.draft} />
             </div>
 
             <div className="mt-8 rounded-xl border border-surface-line bg-white p-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-headline text-lg font-semibold text-neutral">
-                  آخر البوستات
+                  {t("dash.recent")}
                 </h2>
                 <Link
                   href="/posts"
                   className="text-xs text-primary hover:underline"
                 >
-                  عرض الكل
+                  {t("dash.viewAll")}
                 </Link>
               </div>
 
               {recent.length === 0 && (
-                <p className="mt-4 text-sm text-muted">مفيش بوستات لسه.</p>
+                <p className="mt-4 text-sm text-muted">{t("dash.empty")}</p>
               )}
 
               <div className="mt-4 flex flex-col gap-3">

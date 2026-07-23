@@ -1,14 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "./Reveal";
-
-const points = [
-  "تحليل أداء المحتوى بلحظة",
-  "دعم في مخصص باللغة العربية",
-  "تحديثات أسبوعية لأحدث ترندات السوشيال ميديا",
-];
+import { useLanguage } from "../lib/i18n/language-context";
 
 export default function Community() {
+  const { t } = useLanguage();
+  const points = [t("community.p1"), t("community.p2"), t("community.p3")];
+
   return (
     <section id="showcase" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -16,11 +16,10 @@ export default function Community() {
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
               <h2 className="font-headline text-3xl font-bold text-neutral sm:text-4xl">
-                مجتمع المبدعين ينتظرك
+                {t("community.title")}
               </h2>
               <p className="mt-4 text-sm leading-7 text-muted">
-                انضم إلى أكثر من 5,000 صانع محتوى وشركة يستخدمون PostAI يوميًا
-                لتوسيع نطاق تأثيرهم الرقمي دون عناء.
+                {t("community.desc")}
               </p>
 
               <ul className="mt-6 flex flex-col gap-3">
@@ -47,14 +46,14 @@ export default function Community() {
                 href="/register"
                 className="mt-8 inline-block rounded-full bg-primary hover:bg-primary-light px-7 py-3.5 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
               >
-                اقرأ قصص النجاح
+                {t("community.cta")}
               </Link>
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-surface-line">
               <Image
                 src="/design/team-photo.png"
-                alt="فريق من صناع المحتوى يعملون معًا"
+                alt={t("community.imgAlt")}
                 width={700}
                 height={500}
                 className="h-full w-full object-cover"

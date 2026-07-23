@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../lib/auth-context";
+import { LanguageProvider } from "../lib/i18n/language-context";
 
 const plexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-jakarta",
@@ -13,9 +14,9 @@ const jakarta = plexArabic;
 const inter = plexArabic;
 
 export const metadata: Metadata = {
-  title: "PostAI — بوستاتك الجاهزة في ثواني",
+  title: "OmniPost — بوستاتك الجاهزة في ثواني",
   description:
-    "PostAI بيحول فكرتك لبوستات احترافية على السوشيال ميديا في ثواني، بالذكاء الاصطناعي، وبأسلوبك انت.",
+    "OmniPost بيحول فكرتك لبوستات احترافية على السوشيال ميديا في ثواني، بالذكاء الاصطناعي، وبأسلوبك انت.",
 };
 
 export default function RootLayout({
@@ -27,10 +28,13 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
+      suppressHydrationWarning
       className={`${jakarta.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-neutral">
-        <AuthProvider>{children}</AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

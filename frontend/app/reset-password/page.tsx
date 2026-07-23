@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
 import { validatePassword } from "../../lib/validation";
 import { useAuth } from "../../lib/auth-context";
+import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 
@@ -13,6 +14,7 @@ function ResetPasswordForm() {
   const router = useRouter();
   const resetToken = useSearchParams().get("token") ?? "";
   const { token: authToken, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!authLoading && authToken) {
@@ -32,7 +34,7 @@ function ResetPasswordForm() {
     const passwordError = validatePassword(password);
     if (passwordError) next.password = passwordError;
     if (confirmPassword !== password) {
-      next.confirmPassword = "كلمتا المرور غير متطابقتين";
+      next.confirmPassword = t("reset.mismatch");
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -42,7 +44,7 @@ function ResetPasswordForm() {
     e.preventDefault();
     setServerError("");
     if (!resetToken) {
-      setServerError("رابط إعادة التعيين غير صالح");
+      setServerError(t("reset.invalidLink"));
       return;
     }
     if (!validate()) return;
@@ -54,7 +56,7 @@ function ResetPasswordForm() {
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {
       setServerError(
-        err instanceof ApiError ? err.message : "الرابط غير صالح أو منتهي",
+        err instanceof ApiError ? err.message : t("reset.invalidOrExpired"),
       );
     } finally {
       setIsSubmitting(false);
@@ -67,15 +69,13 @@ function ResetPasswordForm() {
         <AuthLogo />
 
         <h1 className="font-headline mt-7 text-2xl font-bold text-neutral">
-          كلمة مرور جديدة
+          {t("reset.title")}
         </h1>
-        <p className="mt-1.5 text-sm text-muted">
-          اختار كلمة مرور جديدة لحسابك.
-        </p>
+        <p className="mt-1.5 text-sm text-muted">{t("reset.subtitle")}</p>
 
         {done ? (
           <p className="mt-7 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-700">
-            تم تغيير كلمة المرور، جاري تحويلك لتسجيل الدخول...
+            {t("reset.done")}
           </p>
         ) : (
           <form
@@ -90,7 +90,7 @@ function ResetPasswordForm() {
             )}
 
             <AuthField
-              label="كلمة المرور الجديدة"
+              label={t("reset.newPassword")}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -117,7 +117,7 @@ function ResetPasswordForm() {
             />
 
             <AuthField
-              label="تأكيد كلمة المرور"
+              label={t("reset.confirmPassword")}
               type="password"
               placeholder="••••••••"
               value={confirmPassword}
@@ -148,14 +148,14 @@ function ResetPasswordForm() {
               disabled={isSubmitting}
               className="mt-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-light disabled:opacity-50"
             >
-              {isSubmitting ? "...جاري الحفظ" : "حفظ كلمة المرور"}
+              {isSubmitting ? t("reset.submitting") : t("reset.submit")}
             </button>
           </form>
         )}
 
         <p className="mt-6 text-center text-sm text-muted">
           <Link href="/login" className="font-semibold text-primary">
-            الرجوع لتسجيل الدخول
+            {t("reset.backLogin")}
           </Link>
         </p>
       </div>
