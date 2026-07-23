@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
@@ -10,8 +10,14 @@ import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && token) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, token, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +46,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني",

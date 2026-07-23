@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, FormEvent, Suspense } from "react";
+import { useState, FormEvent, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
 import { validatePassword } from "../../lib/validation";
+import { useAuth } from "../../lib/auth-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 
 function ResetPasswordForm() {
   const router = useRouter();
-  const token = useSearchParams().get("token") ?? "";
+  const resetToken = useSearchParams().get("token") ?? "";
+  const { token: authToken, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && authToken) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, authToken, router]);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,7 +41,7 @@ function ResetPasswordForm() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setServerError("");
-    if (!token) {
+    if (!resetToken) {
       setServerError("رابط إعادة التعيين غير صالح");
       return;
     }
@@ -41,7 +49,7 @@ function ResetPasswordForm() {
 
     setIsSubmitting(true);
     try {
-      await authApi.resetPassword(token, password);
+      await authApi.resetPassword(resetToken, password);
       setDone(true);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {

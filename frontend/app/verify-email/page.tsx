@@ -2,12 +2,21 @@
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
+import { useAuth } from "../../lib/auth-context";
 import AuthLogo from "../../components/AuthLogo";
 
 function VerifyEmailStatus() {
   const token = useSearchParams().get("token") ?? "";
+  const router = useRouter();
+  const { token: authToken, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && authToken) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, authToken, router]);
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );

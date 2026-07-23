@@ -1,13 +1,24 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authApi, ApiError } from "../../lib/api";
 import { validateEmail } from "../../lib/validation";
+import { useAuth } from "../../lib/auth-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
+  const { token, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && token) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, token, router]);
+
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [serverError, setServerError] = useState("");

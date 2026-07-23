@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "../lib/auth-context";
 
 const links = [
   { href: "#how", label: "طريقة العمل" },
@@ -13,6 +14,8 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { token, isLoading } = useAuth();
+  const isAuthed = !isLoading && !!token;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -52,18 +55,29 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/login"
-            className="text-sm text-muted transition-colors hover:text-neutral"
-          >
-            تسجيل الدخول
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
-          >
-            جرّب مجانًا
-          </Link>
+          {isAuthed ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+            >
+              لوحة التحكم
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm text-muted transition-colors hover:text-neutral"
+              >
+                تسجيل الدخول
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              >
+                جرّب مجانًا
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -106,15 +120,26 @@ export default function Navbar() {
               </a>
             ))}
             <div className="mt-2 flex flex-col gap-3 border-t border-surface-line pt-4">
-              <Link href="/login" className="text-sm text-muted">
-                تسجيل الدخول
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-center text-sm font-semibold text-white"
-              >
-                جرّب مجانًا
-              </Link>
+              {isAuthed ? (
+                <Link
+                  href="/dashboard"
+                  className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-center text-sm font-semibold text-white"
+                >
+                  لوحة التحكم
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm text-muted">
+                    تسجيل الدخول
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="rounded-full bg-primary hover:bg-primary-light px-5 py-2 text-center text-sm font-semibold text-white"
+                  >
+                    جرّب مجانًا
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

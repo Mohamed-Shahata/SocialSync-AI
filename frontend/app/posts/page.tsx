@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../../lib/auth-context";
 import { postsApi, UserPost, Platform } from "../../lib/api";
+import DashboardShell from "../../components/DashboardShell";
 
 const statusLabels: Record<string, string> = {
   DRAFT: "مسودة",
@@ -32,7 +33,7 @@ const filters: { key: FilterKey; label: string }[] = [
 const PAGE_SIZE = 5;
 
 export default function MyPostsPage() {
-  const { user, token, logout } = useAuth();
+  const { user, token } = useAuth();
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -73,49 +74,8 @@ export default function MyPostsPage() {
   const pagePosts = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col justify-between border-l border-surface-line bg-white p-5 md:flex">
-        <div>
-          <div className="mb-8 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
-              ✦
-            </div>
-            <div>
-              <p className="font-headline text-sm font-bold">PostAI</p>
-              <p className="text-xs text-muted">Social Media Manager</p>
-            </div>
-          </div>
-
-          <nav className="flex flex-col gap-1 text-sm">
-            <SidebarLink label="Dashboard" href="/" />
-            <SidebarLink label="My Posts" href="/posts" active />
-            <SidebarLink label="Create Post" href="/posts/new" />
-            <SidebarLink label="Settings" href="#" />
-          </nav>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="rounded-xl bg-primary p-4 text-white">
-            <p className="text-sm font-semibold">Upgrade Pro</p>
-            <p className="mt-1 text-xs text-white/80">
-              احصل على مزيد من الميزات الذكاء الاصطناعي المتقدمة
-            </p>
-            <button className="mt-3 w-full rounded-lg bg-white py-1.5 text-xs font-semibold text-primary">
-              ترقية الآن
-            </button>
-          </div>
-          <button
-            onClick={() => logout()}
-            className="text-right text-xs text-muted hover:text-neutral"
-          >
-            تسجيل الخروج
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex-1 px-4 py-6 md:px-8">
+    <DashboardShell>
+      <div>
         {/* Topbar */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -226,30 +186,7 @@ export default function MyPostsPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function SidebarLink({
-  label,
-  href,
-  active,
-}: {
-  label: string;
-  href: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-lg px-3 py-2 ${
-        active
-          ? "bg-primary text-white"
-          : "text-muted hover:bg-bg-soft hover:text-neutral"
-      }`}
-    >
-      {label}
-    </Link>
+    </DashboardShell>
   );
 }
 

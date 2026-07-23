@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
@@ -16,8 +16,14 @@ const accountTypes = [
 ];
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && token) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, token, router]);
 
   const [accountType, setAccountType] = useState("individual");
   const [fullName, setFullName] = useState("");
@@ -48,7 +54,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await register(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : "حصل خطأ، حاول تاني",
