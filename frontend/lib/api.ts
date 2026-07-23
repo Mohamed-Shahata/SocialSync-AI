@@ -79,3 +79,74 @@ export const authApi = {
       body: JSON.stringify({ token, newPassword }),
     }),
 };
+
+export type Platform = "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "X";
+export type PostStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED" | "FAILED";
+
+export interface PostVariant {
+  id: string;
+  platform: Platform;
+  status: string;
+}
+
+export interface UserPost {
+  id: string;
+  originalText: string;
+  topic: string | null;
+  mediaUrls: string[];
+  status: PostStatus;
+  createdAt: string;
+  variants: PostVariant[];
+}
+
+async function requestForm<T>(
+  path: string,
+  formData: FormData,
+  token: string,
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(data?.message ?? "Something went wrong", res.status);
+  }
+  return data as T;
+}
+
+export const postsApi = {
+  create: (
+    token: string,
+    text: string,
+    platforms: Platform[],
+    files: File[],
+    topic?: string,
+  ) => {
+    const formData = new FormData();
+    formData.append("text", text);
+    if (topic) formData.append("topic", topic);
+    formData.append("platforms", JSON.stringify(platforms));
+    files.forEach((f) => formData.append("media", f));
+    return requestForm<UserPost>("/posts", formData, token);
+  },
+
+  list: (token: string) =>
+    request<UserPost[]>("/posts", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  update: (token: string, id: string, text: string) =>
+    request<UserPost>(`/posts/${id}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ text }),
+    }),
+
+  remove: (token: string, id: string) =>
+    request<{ message: string }>(`/posts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+};

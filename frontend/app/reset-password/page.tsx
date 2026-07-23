@@ -3,7 +3,7 @@
 import { useState, FormEvent, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { authApi, ApiError } from "../../../tes/frontend/lib/api";
+import { authApi, ApiError } from "../../lib/api";
 import { validatePassword } from "../../lib/validation";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";

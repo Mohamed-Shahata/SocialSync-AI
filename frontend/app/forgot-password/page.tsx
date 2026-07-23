@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
-import { authApi, ApiError } from "../../../tes/frontend/lib/api";
+import { authApi, ApiError } from "../../lib/api";
 import { validateEmail } from "../../lib/validation";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";

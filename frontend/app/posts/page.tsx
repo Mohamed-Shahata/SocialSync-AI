@@ -1,0 +1,333 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useAuth } from "../../lib/auth-context";
+import { postsApi, UserPost, Platform } from "../../lib/api";
+
+const statusLabels: Record<string, string> = {
+  DRAFT: "مسودة",
+  SCHEDULED: "مجدول",
+  PUBLISHED: "منشور",
+  FAILED: "فشل",
+};
+
+const platformDot: Record<Platform, string> = {
+  LINKEDIN: "bg-sky-500",
+  FACEBOOK: "bg-blue-600",
+  INSTAGRAM: "bg-pink-500",
+  TIKTOK: "bg-neutral",
+  X: "bg-neutral",
+};
+
+type FilterKey = "ALL" | "PUBLISHED" | "DRAFT" | "SCHEDULED";
+
+const filters: { key: FilterKey; label: string }[] = [
+  { key: "ALL", label: "الكل" },
+  { key: "PUBLISHED", label: "المحتوى" },
+  { key: "DRAFT", label: "المسودة" },
+  { key: "SCHEDULED", label: "المجدول" },
+];
+
+const PAGE_SIZE = 5;
+
+export default function MyPostsPage() {
+  const { user, token, logout } = useAuth();
+  const [posts, setPosts] = useState<UserPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("ALL");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (!token) return;
+    postsApi
+      .list(token)
+      .then(setPosts)
+      .finally(() => setIsLoading(false));
+  }, [token]);
+
+  async function handleDelete(id: string) {
+    if (!token) return;
+    setDeletingId(id);
+    try {
+      await postsApi.remove(token, id);
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const filtered = useMemo(() => {
+    return posts.filter((p) => {
+      const matchesFilter = filter === "ALL" || p.status === filter;
+      const matchesSearch = p.originalText
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [posts, filter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagePosts = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="hidden w-64 shrink-0 flex-col justify-between border-l border-surface-line bg-white p-5 md:flex">
+        <div>
+          <div className="mb-8 flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
+              ✦
+            </div>
+            <div>
+              <p className="font-headline text-sm font-bold">PostAI</p>
+              <p className="text-xs text-muted">Social Media Manager</p>
+            </div>
+          </div>
+
+          <nav className="flex flex-col gap-1 text-sm">
+            <SidebarLink label="Dashboard" href="/" />
+            <SidebarLink label="My Posts" href="/posts" active />
+            <SidebarLink label="Create Post" href="/posts/new" />
+            <SidebarLink label="Settings" href="#" />
+          </nav>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="rounded-xl bg-primary p-4 text-white">
+            <p className="text-sm font-semibold">Upgrade Pro</p>
+            <p className="mt-1 text-xs text-white/80">
+              احصل على مزيد من الميزات الذكاء الاصطناعي المتقدمة
+            </p>
+            <button className="mt-3 w-full rounded-lg bg-white py-1.5 text-xs font-semibold text-primary">
+              ترقية الآن
+            </button>
+          </div>
+          <button
+            onClick={() => logout()}
+            className="text-right text-xs text-muted hover:text-neutral"
+          >
+            تسجيل الخروج
+          </button>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 px-4 py-6 md:px-8">
+        {/* Topbar */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-bg-soft text-sm">
+              {user?.email?.[0]?.toUpperCase() ?? "؟"}
+            </div>
+            <Link
+              href="/posts/new"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light"
+            >
+              + بوست جديد
+            </Link>
+          </div>
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="ابحث عن منشور..."
+            className="w-64 rounded-xl border border-surface-line bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="mt-6 flex items-center gap-2">
+          {filters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => {
+                setFilter(f.key);
+                setPage(1);
+              }}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+                filter === f.key
+                  ? "bg-primary text-white"
+                  : "bg-white text-muted hover:bg-bg-soft"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {isLoading && (
+          <p className="mt-8 text-sm text-muted">...جاري التحميل</p>
+        )}
+
+        {!isLoading && (
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pagePosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onDelete={() => handleDelete(post.id)}
+                deleting={deletingId === post.id}
+              />
+            ))}
+
+            {/* New post card */}
+            <Link
+              href="/posts/new"
+              className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-surface-line bg-white text-center text-muted hover:border-primary hover:text-primary"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-bg-soft text-lg">
+                +
+              </span>
+              <p className="text-sm font-medium">إنشاء منشور جديد</p>
+              <p className="px-6 text-xs">ابدأ بإنشاء المنشور القادم</p>
+            </Link>
+          </div>
+        )}
+
+        {!isLoading && filtered.length === 0 && (
+          <p className="mt-6 text-sm text-muted">مفيش بوستات لسه.</p>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="rounded-lg px-2 py-1 text-muted disabled:opacity-30"
+            >
+              ‹
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                className={`h-7 w-7 rounded-full ${
+                  page === n
+                    ? "bg-primary text-white"
+                    : "text-muted hover:bg-bg-soft"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="rounded-lg px-2 py-1 text-muted disabled:opacity-30"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SidebarLink({
+  label,
+  href,
+  active,
+}: {
+  label: string;
+  href: string;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-lg px-3 py-2 ${
+        active
+          ? "bg-primary text-white"
+          : "text-muted hover:bg-bg-soft hover:text-neutral"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function PostCard({
+  post,
+  onDelete,
+  deleting,
+}: {
+  post: UserPost;
+  onDelete: () => void;
+  deleting: boolean;
+}) {
+  const date = new Date(post.createdAt).toLocaleDateString("ar-EG", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-surface-line bg-white">
+      <div className="relative h-32 w-full bg-bg-soft">
+        {post.mediaUrls[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.mediaUrls[0]}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted">
+            بدون صورة
+          </div>
+        )}
+        <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
+          {statusLabels[post.status]}
+        </span>
+      </div>
+
+      <div className="p-3">
+        <p className="text-xs text-muted">{date}</p>
+        <p className="mt-1 line-clamp-2 text-sm font-semibold text-neutral">
+          {post.topic || post.originalText.slice(0, 40)}
+        </p>
+        <p className="mt-1 line-clamp-2 text-xs text-muted">
+          {post.originalText}
+        </p>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex gap-2">
+            {post.status === "DRAFT" && (
+              <button
+                onClick={onDelete}
+                disabled={deleting}
+                title="حذف"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+              >
+                🗑
+              </button>
+            )}
+            <Link
+              href={`/posts/${post.id}`}
+              title="تعديل"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-soft text-muted hover:bg-surface-line"
+            >
+              ✎
+            </Link>
+          </div>
+          <div className="flex -space-x-1">
+            {post.variants.map((v) => (
+              <span
+                key={v.id}
+                title={v.platform}
+                className={`h-5 w-5 rounded-full border-2 border-white ${platformDot[v.platform]}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
