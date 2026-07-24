@@ -45,6 +45,11 @@ export class PostsController {
     return this.postsService.findAllForUser(user.id);
   }
 
+  @Get('history')
+  getHistory(@CurrentUser() user: AuthenticatedUser) {
+    return this.postsService.getHistory(user.id);
+  }
+
   @Patch(':id')
   update(
     @CurrentUser() user: AuthenticatedUser,

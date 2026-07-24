@@ -20,10 +20,6 @@ export default function Hero() {
 
       <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-16 px-6 lg:flex-row lg:items-center lg:gap-8">
         <div className="flex-1 text-center lg:text-start">
-          <span className="inline-flex items-center gap-2 rounded-full border border-surface-line bg-surface px-4 py-1.5 text-xs text-muted">
-            {t("hero.badge")}
-          </span>
-
           <h1 className="font-headline mt-6 text-4xl font-extrabold leading-[1.15] text-neutral sm:text-5xl lg:text-6xl">
             {t("hero.title1")}
             <br />

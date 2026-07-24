@@ -11,6 +11,7 @@ import { LinkedInAdapter } from './adapters/linkedin.adapter';
 import { XAdapter } from './adapters/x.adapter';
 import { InstagramAdapter } from './adapters/instagram.adapter';
 import { TikTokAdapter } from './adapters/tiktok.adapter';
+import { SocialAuthService } from '../social-auth/social-auth.service';
 
 @Injectable()
 export class PublishingService {
@@ -18,6 +19,7 @@ export class PublishingService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly socialAuth: SocialAuthService,
     facebook: FacebookAdapter,
     linkedin: LinkedInAdapter,
     x: XAdapter,
@@ -59,9 +61,22 @@ export class PublishingService {
       });
     }
 
+    // Tokens are stored encrypted at rest; this also refreshes them first
+    // if they're expired (or about to be) and the platform supports it.
+    const accessToken = await this.socialAuth.getValidAccessToken(account.id);
+    if (!accessToken) {
+      return this.prisma.postVariant.update({
+        where: { id: variant.id },
+        data: {
+          status: VariantStatus.FAILED,
+          errorLog: 'الحساب محتاج إعادة ربط، التوكن انتهى',
+        },
+      });
+    }
+
     try {
       const externalPostId = await this.adapters[variant.platform].publish(
-        account,
+        { ...account, accessToken },
         { text, mediaUrls },
       );
       return await this.prisma.postVariant.update({

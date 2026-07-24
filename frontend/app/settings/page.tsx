@@ -1,8 +1,15 @@
 "use client";
 
-import { useRef, useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
-import { usersApi, ApiError, Platform } from "../../lib/api";
+import {
+  usersApi,
+  socialAuthApi,
+  ApiError,
+  Platform,
+  ConnectedAccount,
+} from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
 import { useLanguage } from "../../lib/i18n/language-context";
 
@@ -28,6 +35,7 @@ export default function SettingsPage() {
   const { user, token, refreshUser } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
 
   const [name, setName] = useState(user?.name ?? "");
   const [nameStatus, setNameStatus] = useState<"idle" | "saving" | "saved">(
@@ -45,6 +53,72 @@ export default function SettingsPage() {
 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState("");
+
+  const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
+  const [pendingPlatform, setPendingPlatform] = useState<Platform | null>(null);
+  const [callbackNotice, setCallbackNotice] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const loadAccounts = async () => {
+    if (!token) return;
+    try {
+      const list = await usersApi.socialAccounts(token);
+      setAccounts(list);
+    } finally {
+      setAccountsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Handle the ?platform=&status=&message= query the OAuth callback redirects with.
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (!status) return;
+    if (status === "connected") {
+      setCallbackNotice({
+        kind: "success",
+        text: t("settings.accountsConnectedOk"),
+      });
+      loadAccounts();
+    } else if (status === "error") {
+      setCallbackNotice({
+        kind: "error",
+        text: searchParams.get("message") || t("settings.accountsConnectError"),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  async function handleConnect(platform: Platform) {
+    if (!token) return;
+    setPendingPlatform(platform);
+    try {
+      const { url } = await socialAuthApi.connect(token, platform);
+      window.location.href = url;
+    } catch {
+      setPendingPlatform(null);
+    }
+  }
+
+  async function handleDisconnect(accountId: string) {
+    if (!token) return;
+    setPendingPlatform(
+      accounts.find((a) => a.id === accountId)?.platform ?? null,
+    );
+    try {
+      await usersApi.disconnectSocialAccount(token, accountId);
+      await loadAccounts();
+    } finally {
+      setPendingPlatform(null);
+    }
+  }
 
   async function handleNameSubmit(e: FormEvent) {
     e.preventDefault();
@@ -158,35 +232,89 @@ export default function SettingsPage() {
           <p className="mt-1 text-sm text-muted">
             {t("settings.accountsDesc")}
           </p>
+
+          {callbackNotice && (
+            <p
+              className={`mt-3 rounded-lg px-3 py-2 text-xs ${
+                callbackNotice.kind === "success"
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-600"
+              }`}
+            >
+              {callbackNotice.text}
+            </p>
+          )}
+
           <div className="mt-4 flex flex-col gap-2">
-            {SOCIAL_PLATFORMS.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-bg-soft px-3 py-2.5"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ background: p.bg }}
-                  >
-                    {p.icon}
-                  </span>
-                  <span className="text-sm text-neutral">{p.label}</span>
-                </div>
-                <button
-                  type="button"
-                  disabled
-                  title={t("settings.accountsComingSoon")}
-                  className="rounded-lg border border-surface-line px-3 py-1.5 text-xs font-medium text-muted opacity-60"
+            {SOCIAL_PLATFORMS.map((p) => {
+              const account = accounts.find((a) => a.platform === p.id);
+              const isPending = pendingPlatform === p.id;
+              const statusLabel =
+                account?.status === "ACTIVE"
+                  ? t("settings.accountsActive")
+                  : account?.status === "EXPIRED"
+                    ? t("settings.accountsExpired")
+                    : null;
+
+              return (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-bg-soft px-3 py-2.5"
                 >
-                  {t("settings.accountsConnect")}
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={{ background: p.bg }}
+                    >
+                      {p.icon}
+                    </span>
+                    <div>
+                      <span className="block text-sm text-neutral">
+                        {p.label}
+                      </span>
+                      {account && (
+                        <span
+                          className={`block text-[11px] ${
+                            account.status === "ACTIVE"
+                              ? "text-green-600"
+                              : "text-amber-600"
+                          }`}
+                        >
+                          {account.accountName} · {statusLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!account || account.status !== "ACTIVE" ? (
+                    <button
+                      type="button"
+                      disabled={accountsLoading || isPending}
+                      onClick={() => handleConnect(p.id)}
+                      className="rounded-lg border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 disabled:opacity-50"
+                    >
+                      {isPending
+                        ? t("settings.accountsConnecting")
+                        : account?.status === "EXPIRED"
+                          ? t("settings.accountsReconnect")
+                          : t("settings.accountsConnect")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => handleDisconnect(account.id)}
+                      className="rounded-lg border border-surface-line px-3 py-1.5 text-xs font-medium text-muted hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                    >
+                      {isPending
+                        ? t("settings.accountsDisconnecting")
+                        : t("settings.accountsDisconnect")}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <p className="mt-3 text-xs text-muted">
-            {t("settings.accountsComingSoon")}
-          </p>
         </div>
 
         {/* Avatar */}

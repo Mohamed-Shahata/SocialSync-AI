@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Patch,
   Post,
   UploadedFile,
@@ -52,6 +54,14 @@ export class UsersController {
   @Get('me/social-accounts')
   getSocialAccounts(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.getSocialAccounts(user.id);
+  }
+
+  @Delete('me/social-accounts/:id')
+  disconnectSocialAccount(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.disconnectSocialAccount(user.id, id);
   }
 
   @Post('me/avatar')

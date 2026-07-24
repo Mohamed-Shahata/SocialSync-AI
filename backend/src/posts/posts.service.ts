@@ -18,6 +18,7 @@ import {
   PostStatus,
   VariantStatus,
 } from '../../generated/prisma/client';
+import { buildPostLink } from './post-link.util';
 
 @Injectable()
 export class PostsService {
@@ -90,6 +91,75 @@ export class PostsService {
       include: { variants: true },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /**
+   * Post History / Analytics: flat list of every published variant for the
+   * user, each with a direct link to the platform and a small stats summary.
+   */
+  async getHistory(userId: string) {
+    const posts = await this.prisma.post.findMany({
+      where: {
+        userId,
+        variants: { some: { status: VariantStatus.PUBLISHED } },
+      },
+      include: { variants: { where: { status: VariantStatus.PUBLISHED } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const accounts = await this.prisma.socialAccount.findMany({
+      where: { userId },
+      select: { platform: true, accountName: true },
+    });
+    const accountByPlatform = new Map(
+      accounts.map((a) => [a.platform, a.accountName]),
+    );
+
+    const items = posts.flatMap((post) =>
+      post.variants.map((variant) => ({
+        postId: post.id,
+        variantId: variant.id,
+        platform: variant.platform,
+        text: variant.generatedText,
+        mediaUrls: post.mediaUrls,
+        publishedAt: variant.publishedAt,
+        externalPostId: variant.externalPostId,
+        link: buildPostLink(
+          variant.platform,
+          variant.externalPostId,
+          accountByPlatform.get(variant.platform) ?? null,
+        ),
+      })),
+    );
+
+    items.sort((a, b) => {
+      const aTime = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const bTime = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    const byPlatform: Record<string, number> = {};
+    for (const item of items) {
+      byPlatform[item.platform] = (byPlatform[item.platform] ?? 0) + 1;
+    }
+
+    const now = new Date();
+    const thisMonth = items.filter((item) => {
+      if (!item.publishedAt) return false;
+      const d = new Date(item.publishedAt);
+      return (
+        d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+      );
+    }).length;
+
+    return {
+      items,
+      stats: {
+        totalPublished: items.length,
+        thisMonth,
+        byPlatform,
+      },
+    };
   }
 
   private async findOwnedDraft(userId: string, postId: string) {

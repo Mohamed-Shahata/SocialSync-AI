@@ -14,6 +14,7 @@ export default function Sidebar() {
   const navItems = [
     { label: t("sidebar.dashboard"), href: "/dashboard" },
     { label: t("sidebar.myPosts"), href: "/posts" },
+    { label: t("sidebar.history"), href: "/history" },
     { label: t("sidebar.settings"), href: "/settings" },
   ];
 

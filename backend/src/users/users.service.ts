@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -9,6 +10,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
+import { AccountStatus } from '../../generated/prisma/client';
 
 const SALT_ROUNDS = 10;
 
@@ -74,8 +76,37 @@ export class UsersService {
   async getSocialAccounts(userId: string) {
     return this.prisma.socialAccount.findMany({
       where: { userId },
-      select: { id: true, platform: true, accountName: true, status: true },
+      select: {
+        id: true,
+        platform: true,
+        accountName: true,
+        status: true,
+        tokenExpiresAt: true,
+      },
     });
+  }
+
+  async disconnectSocialAccount(userId: string, accountId: string) {
+    const account = await this.prisma.socialAccount.findUnique({
+      where: { id: accountId },
+    });
+    if (!account || account.userId !== userId) {
+      throw new NotFoundException('Connected account not found');
+    }
+
+    // Clear the sensitive tokens outright rather than just flipping status,
+    // so a revoked connection can't still be used to publish.
+    await this.prisma.socialAccount.update({
+      where: { id: accountId },
+      data: {
+        status: AccountStatus.REVOKED,
+        accessToken: '',
+        refreshToken: null,
+        tokenExpiresAt: null,
+      },
+    });
+
+    return { message: 'Account disconnected' };
   }
 
   async updateAvatar(userId: string, file: Express.Multer.File) {

@@ -137,6 +137,7 @@ export interface ConnectedAccount {
   platform: Platform;
   accountName: string;
   status: AccountStatus;
+  tokenExpiresAt: string | null;
 }
 
 export const usersApi = {
@@ -173,6 +174,22 @@ export const usersApi = {
 
   socialAccounts: (token: string) =>
     request<ConnectedAccount[]>("/users/me/social-accounts", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  disconnectSocialAccount: (token: string, id: string) =>
+    request<{ message: string }>(`/users/me/social-accounts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+};
+
+export const socialAuthApi = {
+  // Returns the provider's consent-screen URL; the caller navigates the
+  // browser to it (window.location.href = url), since the OAuth callback
+  // itself can't carry an Authorization header.
+  connect: (token: string, platform: Platform) =>
+    request<{ url: string }>(`/social-auth/${platform}/connect`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };
@@ -286,4 +303,29 @@ export const postsApi = {
         headers: { Authorization: `Bearer ${token}` },
       },
     ),
+
+  history: (token: string) =>
+    request<PostHistoryResponse>("/posts/history", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };
+
+export interface PostHistoryItem {
+  postId: string;
+  variantId: string;
+  platform: Platform;
+  text: string;
+  mediaUrls: string[];
+  publishedAt: string | null;
+  externalPostId: string | null;
+  link: string | null;
+}
+
+export interface PostHistoryResponse {
+  items: PostHistoryItem[];
+  stats: {
+    totalPublished: number;
+    thisMonth: number;
+    byPlatform: Partial<Record<Platform, number>>;
+  };
+}
