@@ -2,9 +2,27 @@
 
 import { useRef, useState, FormEvent } from "react";
 import { useAuth } from "../../lib/auth-context";
-import { usersApi, ApiError } from "../../lib/api";
+import { usersApi, ApiError, Platform } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
 import { useLanguage } from "../../lib/i18n/language-context";
+
+const SOCIAL_PLATFORMS: {
+  id: Platform;
+  label: string;
+  bg: string;
+  icon: string;
+}[] = [
+  { id: "FACEBOOK", label: "Facebook", bg: "#1877F2", icon: "f" },
+  { id: "LINKEDIN", label: "LinkedIn", bg: "#0A66C2", icon: "in" },
+  {
+    id: "INSTAGRAM",
+    label: "Instagram",
+    bg: "linear-gradient(135deg,#f58529,#dd2a7b,#8134af)",
+    icon: "◎",
+  },
+  { id: "TIKTOK", label: "TikTok", bg: "#000000", icon: "♪" },
+  { id: "X", label: "X", bg: "#000000", icon: "✕" },
+];
 
 export default function SettingsPage() {
   const { user, token, refreshUser } = useAuth();
@@ -127,6 +145,48 @@ export default function SettingsPage() {
               English
             </button>
           </div>
+        </div>
+
+        {/* Connected accounts */}
+        <div
+          id="accounts"
+          className="mt-6 rounded-xl border border-surface-line bg-white p-5"
+        >
+          <h2 className="font-headline text-lg font-semibold text-neutral">
+            {t("settings.accounts")}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {t("settings.accountsDesc")}
+          </p>
+          <div className="mt-4 flex flex-col gap-2">
+            {SOCIAL_PLATFORMS.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-bg-soft px-3 py-2.5"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{ background: p.bg }}
+                  >
+                    {p.icon}
+                  </span>
+                  <span className="text-sm text-neutral">{p.label}</span>
+                </div>
+                <button
+                  type="button"
+                  disabled
+                  title={t("settings.accountsComingSoon")}
+                  className="rounded-lg border border-surface-line px-3 py-1.5 text-xs font-medium text-muted opacity-60"
+                >
+                  {t("settings.accountsConnect")}
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted">
+            {t("settings.accountsComingSoon")}
+          </p>
         </div>
 
         {/* Avatar */}
