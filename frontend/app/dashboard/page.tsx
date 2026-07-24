@@ -7,6 +7,7 @@ import { postsApi, UserPost } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
 import DashboardContentSkeleton from "../../components/DashboardContentSkeleton";
 import PlanStatusWidget from "../../components/PlanStatusWidget";
+import ConnectedAccountsWidget from "../../components/ConnectedAccountsWidget";
 import { useLanguage } from "../../lib/i18n/language-context";
 
 export default function DashboardPage() {
@@ -18,6 +19,13 @@ export default function DashboardPage() {
     SCHEDULED: t("status.SCHEDULED"),
     PUBLISHED: t("status.PUBLISHED"),
     FAILED: t("status.FAILED"),
+  };
+
+  const statusStyles: Record<string, string> = {
+    DRAFT: "bg-white text-muted",
+    SCHEDULED: "bg-sky-50 text-sky-700",
+    PUBLISHED: "bg-emerald-50 text-emerald-700",
+    FAILED: "bg-red-50 text-red-700",
   };
 
   const [posts, setPosts] = useState<UserPost[]>([]);
@@ -57,8 +65,9 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
           <PlanStatusWidget user={user} />
+          <ConnectedAccountsWidget />
         </div>
 
         {isLoading ? (
@@ -100,7 +109,9 @@ export default function DashboardPage() {
                     <p className="line-clamp-1 text-sm text-neutral">
                       {post.originalText}
                     </p>
-                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-muted">
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[post.status]}`}
+                    >
                       {statusLabels[post.status]}
                     </span>
                   </div>

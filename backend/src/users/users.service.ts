@@ -71,6 +71,13 @@ export class UsersService {
     });
   }
 
+  async getSocialAccounts(userId: string) {
+    return this.prisma.socialAccount.findMany({
+      where: { userId },
+      select: { id: true, platform: true, accountName: true, status: true },
+    });
+  }
+
   async updateAvatar(userId: string, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No image file provided');

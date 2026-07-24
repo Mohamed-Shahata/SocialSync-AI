@@ -129,6 +129,15 @@ async function requestForm<T>(
   return data as T;
 }
 
+export type AccountStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
+
+export interface ConnectedAccount {
+  id: string;
+  platform: Platform;
+  accountName: string;
+  status: AccountStatus;
+}
+
 export const usersApi = {
   updateProfile: (token: string, name: string) =>
     request<AuthUser>("/users/me", {
@@ -159,6 +168,11 @@ export const usersApi = {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ niche }),
+    }),
+
+  socialAccounts: (token: string) =>
+    request<ConnectedAccount[]>("/users/me/social-accounts", {
+      headers: { Authorization: `Bearer ${token}` },
     }),
 };
 

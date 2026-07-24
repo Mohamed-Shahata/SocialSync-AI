@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Patch,
   Post,
   UploadedFile,
@@ -46,6 +47,11 @@ export class UsersController {
     @Body() dto: CompleteOnboardingDto,
   ) {
     return this.usersService.completeOnboarding(user.id, dto);
+  }
+
+  @Get('me/social-accounts')
+  getSocialAccounts(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.getSocialAccounts(user.id);
   }
 
   @Post('me/avatar')
