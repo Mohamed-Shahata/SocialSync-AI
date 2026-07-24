@@ -7,15 +7,22 @@ import {
 import 'multer';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { AiService, AiProvider } from '../ai/ai.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PostStatus } from '../../generated/prisma/client';
+import { GenerateVariantsDto } from './dto/generate-variants.dto';
+import {
+  Platform,
+  PostStatus,
+  VariantStatus,
+} from '../../generated/prisma/client';
 
 @Injectable()
 export class PostsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
+    private readonly ai: AiService,
   ) {}
 
   async create(
@@ -27,22 +34,49 @@ export class PostsService {
       ? await this.cloudinary.uploadFiles(files)
       : [];
 
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         userId,
         originalText: dto.text,
         topic: dto.topic,
         mediaUrls,
         status: PostStatus.DRAFT,
-        variants: dto.platforms?.length
-          ? {
-              create: dto.platforms.map((platform) => ({
-                platform,
-                generatedText: dto.text,
-              })),
-            }
-          : undefined,
       },
+    });
+
+    if (dto.platforms?.length) {
+      const source = dto.aiPrompt?.trim() || dto.text;
+      await Promise.all(
+        dto.platforms.map(async (platform) => {
+          let generatedText = dto.text;
+          let errorLog: string | null = null;
+          try {
+            generatedText = await this.ai.generateForPlatform(
+              source,
+              platform,
+              dto.topic,
+              dto.provider,
+              dto.dialect,
+            );
+          } catch (e) {
+            errorLog = e instanceof Error ? e.message : 'AI generation failed';
+          }
+
+          return this.prisma.postVariant.create({
+            data: {
+              postId: post.id,
+              platform,
+              generatedText,
+              status: VariantStatus.PENDING,
+              errorLog,
+            },
+          });
+        }),
+      );
+    }
+
+    return this.prisma.post.findUnique({
+      where: { id: post.id },
       include: { variants: true },
     });
   }
@@ -85,5 +119,102 @@ export class PostsService {
     await this.prisma.post.delete({ where: { id: postId } });
 
     return { message: 'Post deleted' };
+  }
+
+  private async findOwnedPost(userId: string, postId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { variants: true },
+    });
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.userId !== userId) throw new ForbiddenException();
+    return post;
+  }
+
+  async generateVariants(
+    userId: string,
+    postId: string,
+    dto: GenerateVariantsDto,
+  ) {
+    const post = await this.findOwnedPost(userId, postId);
+
+    const platforms: Platform[] = dto.platforms?.length
+      ? dto.platforms
+      : post.variants.map((v) => v.platform);
+
+    if (!platforms.length) {
+      throw new BadRequestException('No platforms specified');
+    }
+
+    return Promise.all(
+      platforms.map(async (platform) => {
+        const generatedText = await this.ai.generateForPlatform(
+          post.originalText,
+          platform,
+          post.topic,
+          dto.provider,
+        );
+
+        const existing = post.variants.find((v) => v.platform === platform);
+        if (existing) {
+          return this.prisma.postVariant.update({
+            where: { id: existing.id },
+            data: {
+              generatedText,
+              status: VariantStatus.PENDING,
+              errorLog: null,
+            },
+          });
+        }
+
+        return this.prisma.postVariant.create({
+          data: {
+            postId,
+            platform,
+            generatedText,
+            status: VariantStatus.PENDING,
+          },
+        });
+      }),
+    );
+  }
+
+  async regenerateVariant(
+    userId: string,
+    postId: string,
+    variantId: string,
+    provider?: AiProvider,
+  ) {
+    const post = await this.findOwnedPost(userId, postId);
+    const variant = post.variants.find((v) => v.id === variantId);
+    if (!variant) throw new NotFoundException('Variant not found');
+
+    const generatedText = await this.ai.generateForPlatform(
+      post.originalText,
+      variant.platform,
+      post.topic,
+      provider,
+    );
+
+    return this.prisma.postVariant.update({
+      where: { id: variantId },
+      data: { generatedText, status: VariantStatus.PENDING, errorLog: null },
+    });
+  }
+
+  async updateVariantText(
+    userId: string,
+    postId: string,
+    variantId: string,
+    generatedText: string,
+  ) {
+    const post = await this.findOwnedPost(userId, postId);
+    const variant = post.variants.find((v) => v.id === variantId);
+    if (!variant) throw new NotFoundException('Variant not found');
+
+    return this.prisma.postVariant.update({
+      where: { id: variantId },
+      data: { generatedText, status: VariantStatus.APPROVED },
+    });
   }
 }

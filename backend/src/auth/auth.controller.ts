@@ -6,14 +6,20 @@ import {
   HttpStatus,
   Post,
   Query,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import type { GoogleUser } from './strategies/google.strategy';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -21,7 +27,24 @@ import {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  googleLogin() {
+    // Redirects to Google's consent screen; handled by GoogleAuthGuard.
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req: { user: GoogleUser }, @Res() res: Response) {
+    const { accessToken } = await this.authService.loginWithGoogle(req.user);
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    res.redirect(`${frontendUrl}/auth/callback?token=${accessToken}`);
+  }
 
   @Post('register')
   register(@Body() dto: RegisterDto) {

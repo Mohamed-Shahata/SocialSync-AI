@@ -15,6 +15,9 @@ import 'multer';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { GenerateVariantsDto } from './dto/generate-variants.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
+import { RegenerateVariantDto } from './dto/regenerate-variant.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CurrentUser,
@@ -53,5 +56,44 @@ export class PostsController {
   @Delete(':id')
   remove(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.postsService.remove(user.id, id);
+  }
+
+  @Post(':id/generate')
+  generate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: GenerateVariantsDto,
+  ) {
+    return this.postsService.generateVariants(user.id, id, dto);
+  }
+
+  @Post(':id/variants/:variantId/regenerate')
+  regenerateVariant(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @Body() dto: RegenerateVariantDto,
+  ) {
+    return this.postsService.regenerateVariant(
+      user.id,
+      id,
+      variantId,
+      dto.provider,
+    );
+  }
+
+  @Patch(':id/variants/:variantId')
+  updateVariant(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @Body() dto: UpdateVariantDto,
+  ) {
+    return this.postsService.updateVariantText(
+      user.id,
+      id,
+      variantId,
+      dto.generatedText,
+    );
   }
 }

@@ -9,17 +9,20 @@ import { ApiError } from "../../lib/api";
 import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
+import GoogleAuthButton from "../../components/GoogleAuthButton";
 
 export default function LoginPage() {
-  const { login, token, isLoading: authLoading } = useAuth();
+  const { login, token, user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
     if (!authLoading && token) {
-      router.replace("/dashboard");
+      router.replace(
+        user?.hasCompletedOnboarding ? "/dashboard" : "/onboarding",
+      );
     }
-  }, [authLoading, token, router]);
+  }, [authLoading, token, user, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,8 +50,10 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const authUser = await login(email, password);
+      router.push(
+        authUser?.hasCompletedOnboarding ? "/dashboard" : "/onboarding",
+      );
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : t("auth.genericError"),
@@ -197,6 +202,8 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          <GoogleAuthButton />
 
           <p className="mt-6 text-center text-sm text-muted">
             {t("login.noAccount")}{" "}

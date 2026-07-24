@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useAuth } from "../../lib/auth-context";
 import { postsApi, UserPost } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
+import DashboardContentSkeleton from "../../components/DashboardContentSkeleton";
+import PlanStatusWidget from "../../components/PlanStatusWidget";
 import { useLanguage } from "../../lib/i18n/language-context";
 
 export default function DashboardPage() {
@@ -48,14 +50,21 @@ export default function DashboardPage() {
           </h1>
           <Link
             href="/posts/new"
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light"
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/30 transition hover:bg-primary-light hover:shadow-md"
           >
-            + {t("dash.newPost")}
+            <span className="text-base leading-none">+</span>
+            {t("dash.newPost")}
           </Link>
         </div>
 
+        <div className="mt-6">
+          <PlanStatusWidget user={user} />
+        </div>
+
         {isLoading ? (
-          <p className="mt-8 text-sm text-muted">{t("dash.loading")}</p>
+          <div className="mt-6">
+            <DashboardContentSkeleton withHeader={false} />
+          </div>
         ) : (
           <>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

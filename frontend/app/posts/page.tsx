@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "../../lib/auth-context";
 import { postsApi, UserPost, Platform } from "../../lib/api";
 import DashboardShell from "../../components/DashboardShell";
+import DashboardContentSkeleton from "../../components/DashboardContentSkeleton";
 import { useLanguage } from "../../lib/i18n/language-context";
 import type { TranslationKey } from "../../lib/i18n/translations";
 
@@ -125,7 +126,9 @@ export default function MyPostsPage() {
         </div>
 
         {isLoading && (
-          <p className="mt-8 text-sm text-muted">{t("posts.loading")}</p>
+          <div className="mt-6">
+            <DashboardContentSkeleton withHeader={false} />
+          </div>
         )}
 
         {!isLoading && (

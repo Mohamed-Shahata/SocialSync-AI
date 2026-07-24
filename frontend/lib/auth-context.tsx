@@ -16,7 +16,8 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   register: (email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
+  loginWithToken: (accessToken: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedToken = localStorage.getItem(TOKEN_KEY);
     if (!savedToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- guard clause, no external system to sync with here
       setIsLoading(false);
       return;
     }
@@ -68,6 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     );
     persistSession(accessToken, authUser);
+    return authUser;
+  }
+
+  async function loginWithToken(accessToken: string) {
+    const authUser = await authApi.me(accessToken);
+    persistSession(accessToken, authUser);
+    return authUser;
   }
 
   async function logout() {
@@ -88,7 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, register, login, logout, refreshUser }}
+      value={{
+        user,
+        token,
+        isLoading,
+        register,
+        login,
+        loginWithToken,
+        logout,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

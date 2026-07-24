@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -32,6 +33,12 @@ export class UsersService {
       throw new UnauthorizedException('User no longer exists');
     }
 
+    if (!user.password) {
+      throw new BadRequestException(
+        'This account signed up with Google and has no password set',
+      );
+    }
+
     const currentMatches = await bcrypt.compare(
       dto.currentPassword,
       user.password,
@@ -51,6 +58,17 @@ export class UsersService {
     });
 
     return { message: 'Password changed successfully' };
+  }
+
+  async completeOnboarding(userId: string, dto: CompleteOnboardingDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        niche: dto.niche,
+        hasCompletedOnboarding: true,
+      },
+      omit: { password: true },
+    });
   }
 
   async updateAvatar(userId: string, file: Express.Multer.File) {

@@ -19,6 +19,10 @@ const SALT_ROUNDS = 10;
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1h
 
+// Number of posts a FREE_TRIAL user can create before needing to upgrade.
+// Surfaced to the client so the dashboard can show remaining trial usage.
+export const TRIAL_POST_LIMIT = 5;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -31,10 +35,16 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  private omitPassword<T extends { password: string }>(user: T) {
+  private omitPassword<T extends { password: string | null }>(user: T) {
     const rest: Omit<T, 'password'> = { ...user };
-    delete (rest as { password?: string }).password;
+    delete (rest as { password?: string | null }).password;
     return rest;
+  }
+
+  // Adds the client-facing trial limit alongside the user record so the
+  // dashboard can render "X posts remaining" without hardcoding the limit.
+  private attachPlanInfo<T>(user: T) {
+    return { ...user, trialPostsLimit: TRIAL_POST_LIMIT };
   }
 
   private generateToken() {
@@ -75,8 +85,52 @@ export class AuthService {
 
     return {
       accessToken,
-      user,
+      user: this.attachPlanInfo(user),
     };
+  }
+
+  async loginWithGoogle(profile: {
+    googleId: string;
+    email?: string;
+    name?: string;
+    avatarUrl?: string;
+  }) {
+    if (!profile.email) {
+      throw new BadRequestException('Google account has no email');
+    }
+
+    let user = await this.prisma.user.findUnique({
+      where: { googleId: profile.googleId },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+      });
+
+      user = user
+        ? await this.prisma.user.update({
+            where: { id: user.id },
+            data: { googleId: profile.googleId },
+          })
+        : await this.prisma.user.create({
+            data: {
+              email: profile.email,
+              googleId: profile.googleId,
+              name: profile.name,
+              avatarUrl: profile.avatarUrl,
+              isVerified: true,
+            },
+          });
+    }
+
+    const accessToken = this.signToken({
+      sub: user.id,
+      email: user.email,
+      tokenVersion: user.tokenVersion,
+    });
+
+    return { accessToken, user: this.omitPassword(user) };
   }
 
   async verifyEmail(token: string) {
@@ -107,10 +161,17 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { subscription: true },
     });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'This account signed up with Google. Please use "Continue with Google" to log in.',
+      );
     }
 
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
@@ -131,7 +192,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: this.omitPassword(user),
+      user: this.attachPlanInfo(this.omitPassword(user)),
     };
   }
 
@@ -206,12 +267,13 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       omit: { password: true },
+      include: { subscription: true },
     });
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
 
-    return user;
+    return this.attachPlanInfo(user);
   }
 }

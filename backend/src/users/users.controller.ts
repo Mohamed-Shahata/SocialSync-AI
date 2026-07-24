@@ -12,6 +12,7 @@ import 'multer';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CurrentUser,
@@ -37,6 +38,14 @@ export class UsersController {
     @Body() dto: ChangePasswordDto,
   ) {
     return this.usersService.changePassword(user.id, dto);
+  }
+
+  @Patch('me/onboarding')
+  completeOnboarding(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CompleteOnboardingDto,
+  ) {
+    return this.usersService.completeOnboarding(user.id, dto);
   }
 
   @Post('me/avatar')

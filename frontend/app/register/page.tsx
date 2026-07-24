@@ -10,17 +10,20 @@ import { useLanguage } from "../../lib/i18n/language-context";
 import AuthLogo from "../../components/AuthLogo";
 import AuthField from "../../components/AuthField";
 import AiBrainIllustration from "../../components/AiBrainIllustration";
+import GoogleAuthButton from "../../components/GoogleAuthButton";
 
 export default function RegisterPage() {
-  const { register, token, isLoading: authLoading } = useAuth();
+  const { register, token, user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
     if (!authLoading && token) {
-      router.replace("/dashboard");
+      router.replace(
+        user?.hasCompletedOnboarding ? "/dashboard" : "/onboarding",
+      );
     }
-  }, [authLoading, token, router]);
+  }, [authLoading, token, user, router]);
 
   const accountTypes = [
     { id: "individual", label: t("register.individual") },
@@ -56,7 +59,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await register(email, password);
-      router.push("/dashboard");
+      router.push("/onboarding");
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : t("auth.genericError"),
@@ -211,6 +214,8 @@ export default function RegisterPage() {
               {isSubmitting ? t("register.submitting") : t("register.submit")}
             </button>
           </form>
+
+          <GoogleAuthButton />
 
           <p className="mt-6 text-center text-sm text-muted">
             {t("register.haveAccount")}{" "}

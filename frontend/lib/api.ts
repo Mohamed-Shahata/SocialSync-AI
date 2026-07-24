@@ -33,7 +33,16 @@ export interface AuthUser {
   plan: string;
   name?: string | null;
   avatarUrl?: string | null;
+  hasCompletedOnboarding?: boolean;
+  trialPostsUsed?: number;
+  trialPostsLimit?: number;
+  subscription?: {
+    status: string;
+    renewsAt: string | null;
+  } | null;
 }
+
+export const googleLoginUrl = `${API_URL}/auth/google`;
 
 export interface AuthResponse {
   accessToken: string;
@@ -84,8 +93,10 @@ export const authApi = {
 
 export type Platform = "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "X";
 export type PostStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED" | "FAILED";
+export type AiProvider = "GEMINI" | "GROQ";
 
 export interface PostVariant {
+  generatedText: string;
   id: string;
   platform: Platform;
   status: string;
@@ -142,7 +153,22 @@ export const usersApi = {
     formData.append("avatar", file);
     return requestForm<AuthUser>("/users/me/avatar", formData, token);
   },
+
+  completeOnboarding: (token: string, niche?: string) =>
+    request<AuthUser>("/users/me/onboarding", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ niche }),
+    }),
 };
+
+export type Dialect =
+  | "EGYPTIAN"
+  | "GULF"
+  | "IRAQI"
+  | "LEVANTINE"
+  | "MSA"
+  | "ENGLISH";
 
 export const postsApi = {
   create: (
@@ -151,11 +177,17 @@ export const postsApi = {
     platforms: Platform[],
     files: File[],
     topic?: string,
+    provider?: AiProvider,
+    dialect?: Dialect,
+    aiPrompt?: string,
   ) => {
     const formData = new FormData();
     formData.append("text", text);
     if (topic) formData.append("topic", topic);
+    if (aiPrompt) formData.append("aiPrompt", aiPrompt);
     formData.append("platforms", JSON.stringify(platforms));
+    if (provider) formData.append("provider", provider);
+    if (dialect) formData.append("dialect", dialect);
     files.forEach((f) => formData.append("media", f));
     return requestForm<UserPost>("/posts", formData, token);
   },
@@ -176,5 +208,41 @@ export const postsApi = {
     request<{ message: string }>(`/posts/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  generate: (
+    token: string,
+    id: string,
+    platforms?: Platform[],
+    provider?: AiProvider,
+  ) =>
+    request<PostVariant[]>(`/posts/${id}/generate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ...(platforms ? { platforms } : {}), provider }),
+    }),
+
+  regenerateVariant: (
+    token: string,
+    postId: string,
+    variantId: string,
+    provider?: AiProvider,
+  ) =>
+    request<PostVariant>(`/posts/${postId}/variants/${variantId}/regenerate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ provider }),
+    }),
+
+  updateVariant: (
+    token: string,
+    postId: string,
+    variantId: string,
+    generatedText: string,
+  ) =>
+    request<PostVariant>(`/posts/${postId}/variants/${variantId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ generatedText }),
     }),
 };
