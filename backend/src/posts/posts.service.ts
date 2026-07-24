@@ -8,9 +8,11 @@ import 'multer';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { AiService, AiProvider } from '../ai/ai.service';
+import { PublishingService } from '../publishing/publishing.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { GenerateVariantsDto } from './dto/generate-variants.dto';
+import { PublishPostDto, PublishMode } from './dto/publish-post.dto';
 import {
   Platform,
   PostStatus,
@@ -23,6 +25,7 @@ export class PostsService {
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
     private readonly ai: AiService,
+    private readonly publishing: PublishingService,
   ) {}
 
   async create(
@@ -216,5 +219,119 @@ export class PostsService {
       where: { id: variantId },
       data: { generatedText, status: VariantStatus.APPROVED },
     });
+  }
+
+  async publish(userId: string, postId: string, dto: PublishPostDto) {
+    const post = await this.findOwnedPost(userId, postId);
+
+    const targets = dto.platforms?.length
+      ? post.variants.filter((v) => dto.platforms!.includes(v.platform))
+      : post.variants;
+
+    if (!targets.length) {
+      throw new BadRequestException('No variants to publish');
+    }
+
+    if (dto.mode === PublishMode.SCHEDULE) {
+      if (!dto.scheduledFor) {
+        throw new BadRequestException(
+          'scheduledFor is required when scheduling',
+        );
+      }
+      const scheduledFor = new Date(dto.scheduledFor);
+      if (scheduledFor.getTime() <= Date.now()) {
+        throw new BadRequestException('scheduledFor must be in the future');
+      }
+
+      await this.prisma.postVariant.updateMany({
+        where: { id: { in: targets.map((v) => v.id) } },
+        data: { scheduledFor, status: VariantStatus.PENDING, errorLog: null },
+      });
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { status: PostStatus.SCHEDULED },
+      });
+
+      return this.prisma.post.findUnique({
+        where: { id: postId },
+        include: { variants: true },
+      });
+    }
+
+    // Publish now: run each target through its platform integration.
+    await Promise.all(
+      targets.map((variant) =>
+        this.publishing.publishVariant(
+          userId,
+          variant,
+          variant.generatedText,
+          post.mediaUrls,
+        ),
+      ),
+    );
+
+    const refreshed = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { variants: true },
+    });
+
+    const allPublished = refreshed!.variants.every(
+      (v) => v.status === VariantStatus.PUBLISHED,
+    );
+    const anyPublished = refreshed!.variants.some(
+      (v) => v.status === VariantStatus.PUBLISHED,
+    );
+
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        status: allPublished
+          ? PostStatus.PUBLISHED
+          : anyPublished
+            ? PostStatus.PUBLISHED
+            : PostStatus.FAILED,
+      },
+    });
+
+    return this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { variants: true },
+    });
+  }
+
+  async retryVariantPublish(userId: string, postId: string, variantId: string) {
+    const post = await this.findOwnedPost(userId, postId);
+    const variant = post.variants.find((v) => v.id === variantId);
+    if (!variant) throw new NotFoundException('Variant not found');
+
+    const updated = await this.publishing.publishVariant(
+      userId,
+      variant,
+      variant.generatedText,
+      post.mediaUrls,
+    );
+
+    const refreshed = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { variants: true },
+    });
+    const allPublished = refreshed!.variants.every(
+      (v) => v.status === VariantStatus.PUBLISHED,
+    );
+    const anyPublished = refreshed!.variants.some(
+      (v) => v.status === VariantStatus.PUBLISHED,
+    );
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        status: allPublished
+          ? PostStatus.PUBLISHED
+          : anyPublished
+            ? PostStatus.PUBLISHED
+            : PostStatus.FAILED,
+      },
+    });
+
+    return updated;
   }
 }

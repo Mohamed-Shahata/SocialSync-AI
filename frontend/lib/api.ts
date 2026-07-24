@@ -94,6 +94,7 @@ export const authApi = {
 export type Platform = "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "TIKTOK" | "X";
 export type PostStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED" | "FAILED";
 export type AiProvider = "GEMINI" | "GROQ";
+export type PublishMode = "NOW" | "SCHEDULE";
 
 export interface PostVariant {
   generatedText: string;
@@ -259,4 +260,30 @@ export const postsApi = {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ generatedText }),
     }),
+
+  publish: (
+    token: string,
+    postId: string,
+    mode: PublishMode,
+    scheduledFor?: string,
+    platforms?: Platform[],
+  ) =>
+    request<UserPost>(`/posts/${postId}/publish`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        mode,
+        ...(scheduledFor ? { scheduledFor } : {}),
+        ...(platforms?.length ? { platforms } : {}),
+      }),
+    }),
+
+  retryPublish: (token: string, postId: string, variantId: string) =>
+    request<PostVariant>(
+      `/posts/${postId}/variants/${variantId}/retry-publish`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    ),
 };

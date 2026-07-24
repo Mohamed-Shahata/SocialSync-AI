@@ -18,6 +18,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { GenerateVariantsDto } from './dto/generate-variants.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
 import { RegenerateVariantDto } from './dto/regenerate-variant.dto';
+import { PublishPostDto } from './dto/publish-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CurrentUser,
@@ -95,5 +96,23 @@ export class PostsController {
       variantId,
       dto.generatedText,
     );
+  }
+
+  @Post(':id/publish')
+  publish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: PublishPostDto,
+  ) {
+    return this.postsService.publish(user.id, id, dto);
+  }
+
+  @Post(':id/variants/:variantId/retry-publish')
+  retryPublish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+  ) {
+    return this.postsService.retryVariantPublish(user.id, id, variantId);
   }
 }
